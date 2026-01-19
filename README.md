@@ -1,5 +1,21 @@
-# event.kvarteret.no
+# bun-react-tailwind-shadcn-template
 
-## Utfordringer
+To install dependencies:
 
-- Hvis noen skal lage en event for Realistforeningen (RF), må eventet lages med tilhøriget for RF via StudentBergen API. Har Studentbergen mulighet til å spesifisere hvilken organisasjon det gjelder, eller kan vi 'logge inn med StudentBergen'?
+```bash
+bun install
+```
+
+To start a development server:
+
+```bash
+bun dev
+```
+
+To run for production:
+
+```bash
+bun start
+```
+
+This project was created using `bun init` in bun v1.3.6. [Bun](https://bun.com) is a fast all-in-one JavaScript runtime.
