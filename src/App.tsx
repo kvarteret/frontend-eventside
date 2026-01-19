@@ -14,12 +14,14 @@ export const App = () => (
         <CardTitle className="text-2xl">Legg til nytt arrangement</CardTitle>
         <CardDescription>Skjemaet er inspirert av StudentBergen sitt arrangementsskjema.</CardDescription>
       </CardHeader>
-      <CardContent>{renderForm()}</CardContent>
+      <CardContent>
+        <EventForm />
+      </CardContent>
     </Card>
   </div>
 );
 
-const renderForm = () => (
+const EventForm = () => (
   <form className="space-y-10">
     <BasicsSection />
     <LanguageSection title="Norsk" prefix="" publishLabel="Publiser på norsk" />
