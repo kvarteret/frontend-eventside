@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useForm } from "@tanstack/react-form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -21,7 +22,7 @@ interface LanguageContent {
   location: string;
 }
 
-interface EventFormState {
+interface EventFormValues {
   name: string;
   category: string;
   subCategories: string;
@@ -37,87 +38,12 @@ interface EventFormState {
   en: LanguageContent;
 }
 
-interface SectionProps {
-  title: string;
-  children: React.ReactNode;
-}
-
-interface FieldWrapperProps {
-  id: string;
-  label: string;
-  hint?: string;
-  children: React.ReactNode;
-}
-
-interface InputFieldProps {
-  id: string;
-  label: string;
-  name?: string;
-  type?: React.HTMLInputTypeAttribute;
-  placeholder?: string;
-  required?: boolean;
-  hint?: string;
-  value?: string;
-  onChange?: (value: string) => void;
-}
-
-interface TextareaFieldProps {
-  id: string;
-  label: string;
-  name?: string;
-  rows?: number;
-  hint?: string;
-  value?: string;
-  onChange?: (value: string) => void;
-}
-
-interface CheckboxFieldProps {
-  id: string;
-  label: string;
-  checked?: boolean;
-  onChange?: (checked: boolean) => void;
-}
-
 interface SelectOption {
   readonly id: number | string;
   readonly name: string;
 }
 
-interface SelectFieldProps {
-  id: string;
-  label: string;
-  placeholder: string;
-  options: readonly SelectOption[];
-  value?: string;
-  onChange?: (value: string) => void;
-}
-
-interface DatalistFieldProps {
-  id: string;
-  label: string;
-  placeholder: string;
-  options: readonly { readonly id: number; readonly name: string }[];
-  value?: string;
-  onChange?: (value: string) => void;
-}
-
-interface LanguageToggleProps {
-  value: Language;
-  onChange: (lang: Language) => void;
-}
-
-interface LanguageSectionProps {
-  language: Language;
-  content: LanguageContent;
-  onChange: (content: LanguageContent) => void;
-}
-
-interface EventPreviewProps {
-  event: EventFormState;
-  language: Language;
-}
-
-// Initial state
+// Initial values
 const initialLanguageContent: LanguageContent = {
   available: true,
   name: "",
@@ -127,7 +53,7 @@ const initialLanguageContent: LanguageContent = {
   location: "",
 };
 
-const initialFormState: EventFormState = {
+const defaultValues: EventFormValues = {
   name: "",
   category: "",
   subCategories: "",
@@ -145,16 +71,14 @@ const initialFormState: EventFormState = {
 
 // Components
 export const App = () => {
-  const [formState, setFormState] = useState<EventFormState>(initialFormState);
   const [editingLanguage, setEditingLanguage] = useState<Language>("no");
 
-  const updateField = <K extends keyof EventFormState>(key: K, value: EventFormState[K]) => {
-    setFormState(prev => ({ ...prev, [key]: value }));
-  };
-
-  const updateLanguageContent = (lang: Language, content: LanguageContent) => {
-    setFormState(prev => ({ ...prev, [lang]: content }));
-  };
+  const form = useForm({
+    defaultValues,
+    onSubmit: async ({ value }) => {
+      console.log("Form submitted:", value);
+    },
+  });
 
   return (
     <div className="min-h-screen bg-background p-6 md:p-10">
@@ -165,58 +89,53 @@ export const App = () => {
             <CardTitle className="text-2xl">Legg til nytt arrangement</CardTitle>
           </CardHeader>
           <CardContent>
-            <EventForm
-              formState={formState}
-              editingLanguage={editingLanguage}
-              onEditingLanguageChange={setEditingLanguage}
-              onFieldChange={updateField}
-              onLanguageContentChange={updateLanguageContent}
-            />
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                form.handleSubmit();
+              }}
+              className="space-y-10"
+            >
+              <BasicsSection form={form} />
+
+              <LanguageToggle value={editingLanguage} onChange={setEditingLanguage} />
+
+              <LanguageSection form={form} language={editingLanguage} />
+
+              <GeneralSection form={form} />
+
+              <div className="flex justify-end">
+                <form.Subscribe selector={(state) => state.isSubmitting}>
+                  {(isSubmitting) => (
+                    <Button type="submit" disabled={isSubmitting}>
+                      {isSubmitting ? "Publiserer..." : "Publiser arrangementet"}
+                    </Button>
+                  )}
+                </form.Subscribe>
+              </div>
+            </form>
           </CardContent>
         </Card>
 
         {/* Preview */}
         <div className="lg:sticky lg:top-6 lg:self-start">
-          <EventPreview event={formState} language={editingLanguage} />
+          <form.Subscribe selector={(state) => state.values}>
+            {(values) => <EventPreview event={values} language={editingLanguage} />}
+          </form.Subscribe>
         </div>
       </div>
     </div>
   );
 };
 
-interface EventFormProps {
-  formState: EventFormState;
-  editingLanguage: Language;
-  onEditingLanguageChange: (lang: Language) => void;
-  onFieldChange: <K extends keyof EventFormState>(key: K, value: EventFormState[K]) => void;
-  onLanguageContentChange: (lang: Language, content: LanguageContent) => void;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type FormInstance = any;
+
+interface LanguageToggleProps {
+  value: Language;
+  onChange: (lang: Language) => void;
 }
-
-const EventForm = ({
-  formState,
-  editingLanguage,
-  onEditingLanguageChange,
-  onFieldChange,
-  onLanguageContentChange,
-}: EventFormProps) => (
-  <form className="space-y-10">
-    <BasicsSection formState={formState} onFieldChange={onFieldChange} />
-
-    <LanguageToggle value={editingLanguage} onChange={onEditingLanguageChange} />
-
-    <LanguageSection
-      language={editingLanguage}
-      content={formState[editingLanguage]}
-      onChange={(content) => onLanguageContentChange(editingLanguage, content)}
-    />
-
-    <GeneralSection formState={formState} onFieldChange={onFieldChange} />
-
-    <div className="flex justify-end">
-      <Button type="submit">Publiser arrangementet</Button>
-    </div>
-  </form>
-);
 
 const LanguageToggle = ({ value, onChange }: LanguageToggleProps) => (
   <div className="flex gap-2">
@@ -249,6 +168,11 @@ const LanguageToggle = ({ value, onChange }: LanguageToggleProps) => (
   </div>
 );
 
+interface SectionProps {
+  title: string;
+  children: React.ReactNode;
+}
+
 const Section = ({ title, children }: SectionProps) => (
   <section className="space-y-6">
     <h2 className="text-lg font-semibold">{title}</h2>
@@ -256,88 +180,20 @@ const Section = ({ title, children }: SectionProps) => (
   </section>
 );
 
-const FieldWrapper = ({ id, label, hint, children }: FieldWrapperProps) => (
+interface FieldWrapperProps {
+  label: string;
+  hint?: string;
+  error?: string;
+  children: React.ReactNode;
+}
+
+const FieldWrapper = ({ label, hint, error, children }: FieldWrapperProps) => (
   <div className="space-y-2">
-    <Label htmlFor={id}>{label}</Label>
+    <Label>{label}</Label>
     {children}
-    {hint ? <p className="text-sm text-muted-foreground">{hint}</p> : null}
+    {hint && <p className="text-sm text-muted-foreground">{hint}</p>}
+    {error && <p className="text-sm text-destructive">{error}</p>}
   </div>
-);
-
-const InputField = ({ id, label, name, type = "text", placeholder, required, hint, value, onChange }: InputFieldProps) => (
-  <FieldWrapper id={id} label={label} hint={hint}>
-    <Input
-      id={id}
-      name={name ?? id}
-      type={type}
-      placeholder={placeholder}
-      required={required}
-      value={value}
-      onChange={onChange ? (e) => onChange(e.target.value) : undefined}
-    />
-  </FieldWrapper>
-);
-
-const TextareaField = ({ id, label, name, rows = 6, hint, value, onChange }: TextareaFieldProps) => (
-  <FieldWrapper id={id} label={label} hint={hint}>
-    <Textarea
-      id={id}
-      name={name ?? id}
-      rows={rows}
-      value={value}
-      onChange={onChange ? (e) => onChange(e.target.value) : undefined}
-    />
-  </FieldWrapper>
-);
-
-const CheckboxField = ({ id, label, checked, onChange }: CheckboxFieldProps) => (
-  <div className="flex items-center gap-3">
-    <Input
-      id={id}
-      name={id}
-      type="checkbox"
-      className="h-4 w-4"
-      checked={checked}
-      onChange={onChange ? (e) => onChange(e.target.checked) : undefined}
-    />
-    <Label htmlFor={id}>{label}</Label>
-  </div>
-);
-
-const SelectField = ({ id, label, placeholder, options, value, onChange }: SelectFieldProps) => (
-  <FieldWrapper id={id} label={label}>
-    <Select value={value} onValueChange={onChange}>
-      <SelectTrigger id={id}>
-        <SelectValue placeholder={placeholder} />
-      </SelectTrigger>
-      <SelectContent>
-        {options.map(option => (
-          <SelectItem key={option.id} value={String(option.id)}>
-            {option.name}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  </FieldWrapper>
-);
-
-const DatalistField = ({ id, label, placeholder, options, value, onChange }: DatalistFieldProps) => (
-  <FieldWrapper id={id} label={label}>
-    <Input
-      id={id}
-      name={id}
-      placeholder={placeholder}
-      list={`${id}-options`}
-      type="text"
-      value={value}
-      onChange={onChange ? (e) => onChange(e.target.value) : undefined}
-    />
-    <datalist id={`${id}-options`}>
-      {options.map(option => (
-        <option key={option.id} value={`${option.name} (${option.id})`} />
-      ))}
-    </datalist>
-  </FieldWrapper>
 );
 
 const TwoColumn = ({ left, right }: { left: React.ReactNode; right: React.ReactNode }) => (
@@ -348,52 +204,91 @@ const TwoColumn = ({ left, right }: { left: React.ReactNode; right: React.ReactN
 );
 
 interface BasicsSectionProps {
-  formState: EventFormState;
-  onFieldChange: <K extends keyof EventFormState>(key: K, value: EventFormState[K]) => void;
+  form: FormInstance;
 }
 
-const BasicsSection = ({ formState, onFieldChange }: BasicsSectionProps) => (
+const BasicsSection = ({ form }: BasicsSectionProps) => (
   <section className="space-y-6">
-    <InputField
-      id="name"
-      label="Navn"
-      value={formState.name}
-      onChange={(v) => onFieldChange("name", v)}
-    />
-    <SelectField
-      id="category"
-      label="Kategori"
-      placeholder="Velg kategori"
-      options={categoryOptions}
-      value={formState.category}
-      onChange={(v) => onFieldChange("category", v)}
-    />
-    <DatalistField
-      id="subCategories"
-      label="Andre kategorier"
-      placeholder="Skriv inn flere kategorier, separert med komma"
-      options={subCategoryOptions}
-      value={formState.subCategories}
-      onChange={(v) => onFieldChange("subCategories", v)}
-    />
-    <DatalistField
-      id="eventByExtra"
-      label="Andre arrangører"
-      placeholder="Søk eller skriv inn arrangører"
-      options={organizerOptions}
-      value={formState.eventByExtra}
-      onChange={(v) => onFieldChange("eventByExtra", v)}
-    />
+    <form.Field name="name">
+      {(field: any) => (
+        <FieldWrapper label="Navn">
+          <Input
+            value={field.state.value}
+            onBlur={field.handleBlur}
+            onChange={(e: any) => field.handleChange(e.target.value)}
+          />
+        </FieldWrapper>
+      )}
+    </form.Field>
+
+    <form.Field name="category">
+      {(field: any) => (
+        <FieldWrapper label="Kategori">
+          <Select value={field.state.value} onValueChange={field.handleChange}>
+            <SelectTrigger>
+              <SelectValue placeholder="Velg kategori" />
+            </SelectTrigger>
+            <SelectContent>
+              {categoryOptions.map((option: SelectOption) => (
+                <SelectItem key={option.id} value={String(option.id)}>
+                  {option.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </FieldWrapper>
+      )}
+    </form.Field>
+
+    <form.Field name="subCategories">
+      {(field: any) => (
+        <FieldWrapper label="Andre kategorier">
+          <Input
+            placeholder="Skriv inn flere kategorier, separert med komma"
+            list="subCategories-options"
+            value={field.state.value}
+            onBlur={field.handleBlur}
+            onChange={(e: any) => field.handleChange(e.target.value)}
+          />
+          <datalist id="subCategories-options">
+            {subCategoryOptions.map((option) => (
+              <option key={option.id} value={`${option.name} (${option.id})`} />
+            ))}
+          </datalist>
+        </FieldWrapper>
+      )}
+    </form.Field>
+
+    <form.Field name="eventByExtra">
+      {(field: any) => (
+        <FieldWrapper label="Andre arrangører">
+          <Input
+            placeholder="Søk eller skriv inn arrangører"
+            list="eventByExtra-options"
+            value={field.state.value}
+            onBlur={field.handleBlur}
+            onChange={(e: any) => field.handleChange(e.target.value)}
+          />
+          <datalist id="eventByExtra-options">
+            {organizerOptions.map((option) => (
+              <option key={option.id} value={`${option.name} (${option.id})`} />
+            ))}
+          </datalist>
+        </FieldWrapper>
+      )}
+    </form.Field>
   </section>
 );
 
-const LanguageSection = ({ language, content, onChange }: LanguageSectionProps) => {
-  const updateContent = <K extends keyof LanguageContent>(key: K, value: LanguageContent[K]) => {
-    onChange({ ...content, [key]: value });
-  };
+interface LanguageSectionProps {
+  form: FormInstance;
+  language: Language;
+}
 
+const LanguageSection = ({ form, language }: LanguageSectionProps) => {
   const labels = {
     no: {
+      title: "Norsk innhold",
       publish: "Publiser på norsk",
       name: "Navn",
       imageCaption: "Bildetekst for hovedbilde",
@@ -403,6 +298,7 @@ const LanguageSection = ({ language, content, onChange }: LanguageSectionProps) 
       location: "Sted (adresse eller møteplass)",
     },
     en: {
+      title: "English content",
       publish: "Publish in English",
       name: "Name",
       imageCaption: "Image caption",
@@ -416,109 +312,194 @@ const LanguageSection = ({ language, content, onChange }: LanguageSectionProps) 
   const l = labels[language];
 
   return (
-    <Section title={language === "no" ? "Norsk innhold" : "English content"}>
-      <CheckboxField
-        id={`${language}-available`}
-        label={l.publish}
-        checked={content.available}
-        onChange={(v) => updateContent("available", v)}
-      />
-      <InputField
-        id={`${language}-name`}
-        label={l.name}
-        value={content.name}
-        onChange={(v) => updateContent("name", v)}
-      />
-      <InputField
-        id={`${language}-imageCaption`}
-        label={l.imageCaption}
-        value={content.imageCaption}
-        onChange={(v) => updateContent("imageCaption", v)}
-      />
-      <InputField
-        id={`${language}-intro`}
-        label={l.intro}
-        value={content.intro}
-        onChange={(v) => updateContent("intro", v)}
-        required={language === "no"}
-      />
-      <TextareaField
-        id={`${language}-article`}
-        label={l.article}
-        value={content.article}
-        onChange={(v) => updateContent("article", v)}
-        hint={l.articleHint}
-      />
-      <InputField
-        id={`${language}-location`}
-        label={l.location}
-        value={content.location}
-        onChange={(v) => updateContent("location", v)}
-      />
+    <Section title={l.title}>
+      <form.Field name={`${language}.available`}>
+        {(field: any) => (
+          <div className="flex items-center gap-3">
+            <Input
+              type="checkbox"
+              className="h-4 w-4"
+              checked={field.state.value}
+              onChange={(e: any) => field.handleChange(e.target.checked)}
+            />
+            <Label>{l.publish}</Label>
+          </div>
+        )}
+      </form.Field>
+
+      <form.Field name={`${language}.name`}>
+        {(field: any) => (
+          <FieldWrapper label={l.name}>
+            <Input
+              value={field.state.value}
+              onBlur={field.handleBlur}
+              onChange={(e: any) => field.handleChange(e.target.value)}
+            />
+          </FieldWrapper>
+        )}
+      </form.Field>
+
+      <form.Field name={`${language}.imageCaption`}>
+        {(field: any) => (
+          <FieldWrapper label={l.imageCaption}>
+            <Input
+              value={field.state.value}
+              onBlur={field.handleBlur}
+              onChange={(e: any) => field.handleChange(e.target.value)}
+            />
+          </FieldWrapper>
+        )}
+      </form.Field>
+
+      <form.Field name={`${language}.intro`}>
+        {(field: any) => (
+          <FieldWrapper label={l.intro}>
+            <Input
+              value={field.state.value}
+              onBlur={field.handleBlur}
+              onChange={(e: any) => field.handleChange(e.target.value)}
+              required={language === "no"}
+            />
+          </FieldWrapper>
+        )}
+      </form.Field>
+
+      <form.Field name={`${language}.article`}>
+        {(field: any) => (
+          <FieldWrapper label={l.article} hint={l.articleHint}>
+            <Textarea
+              rows={6}
+              value={field.state.value}
+              onBlur={field.handleBlur}
+              onChange={(e: any) => field.handleChange(e.target.value)}
+            />
+          </FieldWrapper>
+        )}
+      </form.Field>
+
+      <form.Field name={`${language}.location`}>
+        {(field: any) => (
+          <FieldWrapper label={l.location}>
+            <Input
+              value={field.state.value}
+              onBlur={field.handleBlur}
+              onChange={(e: any) => field.handleChange(e.target.value)}
+            />
+          </FieldWrapper>
+        )}
+      </form.Field>
     </Section>
   );
 };
 
 interface GeneralSectionProps {
-  formState: EventFormState;
-  onFieldChange: <K extends keyof EventFormState>(key: K, value: EventFormState[K]) => void;
+  form: FormInstance;
 }
 
-const GeneralSection = ({ formState, onFieldChange }: GeneralSectionProps) => (
+const GeneralSection = ({ form }: GeneralSectionProps) => (
   <Section title="Generelt">
     <TwoColumn
       left={
-        <InputField
-          id="startTime"
-          label="Starttid"
-          type="datetime-local"
-          required
-          value={formState.startTime}
-          onChange={(v) => onFieldChange("startTime", v)}
-        />
+        <form.Field name="startTime">
+          {(field: any) => (
+            <FieldWrapper label="Starttid">
+              <Input
+                type="datetime-local"
+                required
+                value={field.state.value}
+                onBlur={field.handleBlur}
+                onChange={(e: any) => field.handleChange(e.target.value)}
+              />
+            </FieldWrapper>
+          )}
+        </form.Field>
       }
       right={
-        <InputField
-          id="endTime"
-          label="Slutttid"
-          type="datetime-local"
-          required
-          value={formState.endTime}
-          onChange={(v) => onFieldChange("endTime", v)}
-        />
+        <form.Field name="endTime">
+          {(field: any) => (
+            <FieldWrapper label="Slutttid">
+              <Input
+                type="datetime-local"
+                required
+                value={field.state.value}
+                onBlur={field.handleBlur}
+                onChange={(e: any) => field.handleChange(e.target.value)}
+              />
+            </FieldWrapper>
+          )}
+        </form.Field>
       }
     />
-    <InputField
-      id="locationLink"
-      label="Sted (kartlenke)"
-      type="url"
-      hint="Gjør sted-feltet klikkbart dersom lenke er satt."
-      value={formState.locationLink}
-      onChange={(v) => onFieldChange("locationLink", v)}
-    />
-    <InputField
-      id="facebookUrl"
-      label="Lenke til event på Facebook"
-      type="url"
-      value={formState.facebookUrl}
-      onChange={(v) => onFieldChange("facebookUrl", v)}
-    />
-    <InputField
-      id="price"
-      label="Pris"
-      value={formState.price}
-      onChange={(v) => onFieldChange("price", v)}
-    />
-    <InputField
-      id="ticketsUrl"
-      label="Lenke til nettside eller billettkjøp"
-      type="url"
-      value={formState.ticketsUrl}
-      onChange={(v) => onFieldChange("ticketsUrl", v)}
-    />
-    <InputField id="image" label="Bilde" type="file" />
+
+    <form.Field name="locationLink">
+      {(field: any) => (
+        <FieldWrapper label="Sted (kartlenke)" hint="Gjør sted-feltet klikkbart dersom lenke er satt.">
+          <Input
+            type="url"
+            value={field.state.value}
+            onBlur={field.handleBlur}
+            onChange={(e: any) => field.handleChange(e.target.value)}
+          />
+        </FieldWrapper>
+      )}
+    </form.Field>
+
+    <form.Field name="facebookUrl">
+      {(field: any) => (
+        <FieldWrapper label="Lenke til event på Facebook">
+          <Input
+            type="url"
+            value={field.state.value}
+            onBlur={field.handleBlur}
+            onChange={(e: any) => field.handleChange(e.target.value)}
+          />
+        </FieldWrapper>
+      )}
+    </form.Field>
+
+    <form.Field name="price">
+      {(field: any) => (
+        <FieldWrapper label="Pris">
+          <Input
+            value={field.state.value}
+            onBlur={field.handleBlur}
+            onChange={(e: any) => field.handleChange(e.target.value)}
+          />
+        </FieldWrapper>
+      )}
+    </form.Field>
+
+    <form.Field name="ticketsUrl">
+      {(field: any) => (
+        <FieldWrapper label="Lenke til nettside eller billettkjøp">
+          <Input
+            type="url"
+            value={field.state.value}
+            onBlur={field.handleBlur}
+            onChange={(e: any) => field.handleChange(e.target.value)}
+          />
+        </FieldWrapper>
+      )}
+    </form.Field>
+
+    <form.Field name="image">
+      {(field: any) => (
+        <FieldWrapper label="Bilde">
+          <Input
+            type="file"
+            onBlur={field.handleBlur}
+            onChange={(e: any) => field.handleChange(e.target.value)}
+          />
+        </FieldWrapper>
+      )}
+    </form.Field>
   </Section>
 );
+
+interface EventPreviewProps {
+  event: EventFormValues;
+  language: Language;
+}
 
 const EventPreview = ({ event, language }: EventPreviewProps) => {
   const content = event[language];
