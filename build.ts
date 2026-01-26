@@ -4,6 +4,24 @@ import { existsSync } from "fs";
 import { rm } from "fs/promises";
 import path from "path";
 
+const extensions = [".tsx", ".ts", ".jsx", ".js", ""];
+
+const pathAliasPlugin: Bun.BunPlugin = {
+  name: "path-alias",
+  setup(build) {
+    build.onResolve({ filter: /^@\// }, (args) => {
+      const basePath = path.resolve("src", args.path.slice(2));
+      for (const ext of extensions) {
+        const fullPath = basePath + ext;
+        if (existsSync(fullPath)) {
+          return { path: fullPath };
+        }
+      }
+      return { path: basePath };
+    });
+  },
+};
+
 if (process.argv.includes("--help") || process.argv.includes("-h")) {
   console.log(`
 🏗️  Bun Build Script
@@ -125,7 +143,7 @@ console.log(`📄 Found ${entrypoints.length} HTML ${entrypoints.length === 1 ? 
 const result = await Bun.build({
   entrypoints,
   outdir,
-  plugins: [plugin],
+  plugins: [pathAliasPlugin, plugin],
   minify: true,
   target: "browser",
   sourcemap: "linked",
