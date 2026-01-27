@@ -7,7 +7,9 @@ import { LanguageSection } from "@/components/form/LanguageSection"
 import { DetailsSection } from "@/components/form/DetailsSection"
 import { LanguageToggle } from "@/components/LanguageToggle"
 import { EventPreview } from "@/components/EventPreview"
+import { createEvent } from "@/lib/services/events"
 import type { EventFormValues, Language, LanguageContent } from "@/types"
+import type { FirestoreEvent } from "@/lib/services/types"
 import "./index.css"
 
 const initialLanguageContent: LanguageContent = {
@@ -34,18 +36,68 @@ const defaultValues: EventFormValues = {
   en: { ...initialLanguageContent },
 }
 
+type SubmissionStatus =
+  | { state: "idle" }
+  | { state: "submitting" }
+  | { state: "success"; event: FirestoreEvent }
+  | { state: "error"; message: string }
+
 export const App = () => {
   const [editingLanguage, setEditingLanguage] = useState<Language>("no")
+  const [submissionStatus, setSubmissionStatus] = useState<SubmissionStatus>({
+    state: "idle",
+  })
 
   const form = useForm({
     defaultValues,
     onSubmit: async ({ value }) => {
-      console.log("Form submitted:", value)
+      setSubmissionStatus({ state: "submitting" })
+      try {
+        const event = await createEvent(value)
+        setSubmissionStatus({ state: "success", event })
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : "Ukjent feil ved publisering"
+        setSubmissionStatus({ state: "error", message })
+      }
     },
   })
 
   return (
     <div className="min-h-screen bg-background p-6 md:p-10">
+      {submissionStatus.state === "success" && (
+        <div className="mb-6 rounded-lg border border-green-200 bg-green-50 p-4 text-green-800">
+          <h3 className="font-semibold">Arrangementet er publisert</h3>
+          <p className="text-sm mt-1">
+            Slug: <code className="bg-green-100 px-1 rounded">{submissionStatus.event.slug}</code>
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              setSubmissionStatus({ state: "idle" })
+              form.reset()
+            }}
+            className="mt-3 text-sm underline hover:no-underline"
+          >
+            Opprett nytt arrangement
+          </button>
+        </div>
+      )}
+
+      {submissionStatus.state === "error" && (
+        <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-red-800">
+          <h3 className="font-semibold">Feil ved publisering</h3>
+          <p className="text-sm mt-1">{submissionStatus.message}</p>
+          <button
+            type="button"
+            onClick={() => setSubmissionStatus({ state: "idle" })}
+            className="mt-3 text-sm underline hover:no-underline"
+          >
+            Lukk
+          </button>
+        </div>
+      )}
+
       <form
         onSubmit={(e) => {
           e.preventDefault()
