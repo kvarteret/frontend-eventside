@@ -12,6 +12,7 @@ import { generateUniqueSlug } from "./slugify"
 import { categoryOptions, organizerOptions } from "@/data/studentbergen-form"
 import type { EventFormValues } from "@/types"
 import type { FirestoreEvent, CreateFirestoreEvent } from "./types"
+import { uploadEventImage } from "./storage"
 
 /**
  * Look up a category by ID
@@ -32,56 +33,36 @@ function getOrganizerById(
 }
 
 /**
- * Parse comma-separated IDs into category objects
- */
-function parseSubCategories(
-  subCategories: string
-): { id: number; name: string }[] {
-  if (!subCategories.trim()) return []
-
-  return subCategories
-    .split(",")
-    .map((s) => parseInt(s.trim(), 10))
-    .filter((id) => !isNaN(id))
-    .map((id) => getCategoryById(id))
-    .filter((c): c is { id: number; name: string } => c !== null)
-}
-
-/**
  * Convert form values to Firestore document format
  */
 async function formToFirestore(
-  formValues: EventFormValues
+  formValues: EventFormValues,
+  options?: { slug?: string; imageUrl?: string | null }
 ): Promise<CreateFirestoreEvent> {
   const now = Timestamp.now()
 
   // Generate slug from Norwegian or English name
-  const nameForSlug = formValues.no.name || formValues.en.name || formValues.name
-  const slug = await generateUniqueSlug(nameForSlug)
+  const nameForSlug = formValues.no.name || formValues.en.name
+  const slug = options?.slug ?? (await generateUniqueSlug(nameForSlug))
 
-  // Parse category
-  const categoryId = parseInt(formValues.category, 10)
-  const primaryCategory = !isNaN(categoryId) ? getCategoryById(categoryId) : null
+  // Build categories array from selected IDs
+  const categories = formValues.categories
+    .map((id) => getCategoryById(id))
+    .filter((c): c is { id: number; name: string } => c !== null)
 
-  // Build categories array
-  const categories: { id: number; name: string }[] = []
-  if (primaryCategory) {
-    categories.push(primaryCategory)
+  // Build organizers array from selected IDs (first one is primary)
+  const organizers = formValues.organizers
+    .map((id) => getOrganizerById(id))
+    .filter((o): o is { id: number | null; name: string } => o !== null)
+  const organizer = organizers[0] ?? null
+
+  if (!formValues.startTime || !formValues.endTime) {
+    throw new Error("Start- og sluttid må fylles ut.")
   }
-  categories.push(...parseSubCategories(formValues.subCategories))
-
-  // Parse organizer
-  const organizerId = parseInt(formValues.eventByExtra, 10)
-  const organizer = !isNaN(organizerId) ? getOrganizerById(organizerId) : null
 
   // Parse timestamps
-  const eventStart = formValues.startTime
-    ? Timestamp.fromDate(new Date(formValues.startTime))
-    : Timestamp.now()
-
-  const eventEnd = formValues.endTime
-    ? Timestamp.fromDate(new Date(formValues.endTime))
-    : eventStart
+  const eventStart = Timestamp.fromDate(formValues.startTime)
+  const eventEnd = Timestamp.fromDate(formValues.endTime)
 
   return {
     slug,
@@ -95,7 +76,9 @@ async function formToFirestore(
     ticket_url: formValues.ticketsUrl || null,
     facebook_url: formValues.facebookUrl || null,
 
-    image: formValues.image ? { url: formValues.image, __typename: "firestore" } : null,
+    image: options?.imageUrl
+      ? { url: options.imageUrl, __typename: "firestore" }
+      : null,
 
     organizer,
     categories,
@@ -121,14 +104,6 @@ async function formToFirestore(
           }
         : null,
     },
-
-    location: {
-      no: formValues.no.location || null,
-      en: formValues.en.location || null,
-    },
-
-    is_recurring: false,
-    weekly_recurring: null,
   }
 }
 
@@ -138,7 +113,12 @@ async function formToFirestore(
 export async function createEvent(
   formValues: EventFormValues
 ): Promise<FirestoreEvent> {
-  const eventData = await formToFirestore(formValues)
+  const nameForSlug = formValues.no.name || formValues.en.name
+  const slug = await generateUniqueSlug(nameForSlug)
+  const imageUrl = formValues.image
+    ? await uploadEventImage(formValues.image, slug)
+    : null
+  const eventData = await formToFirestore(formValues, { slug, imageUrl })
   const eventsRef = collection(db, "events")
   const docRef = await addDoc(eventsRef, eventData)
 

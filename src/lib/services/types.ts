@@ -36,13 +36,6 @@ export interface FirestoreEvent {
     no: FirestoreTranslation | null
     en: FirestoreTranslation | null
   }
-
-  // Location as text (not room reference)
-  location: { no: string | null; en: string | null }
-
-  // Fixed values (frontend-eventside doesn't support recurring)
-  is_recurring: false
-  weekly_recurring: null
 }
 
 // Type for creating a new event (without id which is assigned by Firestore)
