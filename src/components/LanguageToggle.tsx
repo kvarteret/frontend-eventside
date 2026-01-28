@@ -12,7 +12,7 @@ export const LanguageToggle = ({ value, onChange }: LanguageToggleProps) => (
       type="button"
       onClick={() => onChange("no")}
       className={cn(
-        "flex items-center gap-2 px-4 py-2 rounded-md border-2 transition-all font-medium",
+        "flex cursor-pointer items-center gap-2 rounded-md border-2 px-4 py-2 font-medium transition-all",
         value === "no"
           ? "border-primary bg-primary/10 text-primary"
           : "border-muted hover:border-muted-foreground/50"
@@ -25,7 +25,7 @@ export const LanguageToggle = ({ value, onChange }: LanguageToggleProps) => (
       type="button"
       onClick={() => onChange("en")}
       className={cn(
-        "flex items-center gap-2 px-4 py-2 rounded-md border-2 transition-all font-medium",
+        "flex cursor-pointer items-center gap-2 rounded-md border-2 px-4 py-2 font-medium transition-all",
         value === "en"
           ? "border-primary bg-primary/10 text-primary"
           : "border-muted hover:border-muted-foreground/50"

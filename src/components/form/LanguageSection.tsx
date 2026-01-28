@@ -6,39 +6,46 @@ import { FieldWrapper } from "./FieldWrapper"
 
 const languageLabels = {
   no: {
-    title: "Norsk innhold",
     publish: "Publiser på norsk",
-    name: "Navn",
-    imageCaption: "Bildetekst for hovedbilde",
-    intro: "Ingress (kort oppsummering)",
-    article: "Tekst om arrangementet",
-    articleHint: "Bruk overskrift 3. Ikke bruk fet skrift til mellomoverskrifter.",
-    location: "Sted (adresse eller møteplass)",
+    name: "Tittel",
+    imageCaption: "Blindetekst for bilde",
+    intro: "Kort oppsummering",
+    article: "Beskrivelse",
+    placeholders: {
+      name: "Frokostmøte om fusjonen",
+      imageCaption: "Studenter spiser pingvin i Teglverket",
+      intro: "Vi arrangerer frokostmøte angående fusjonen mellom Studentersamfunnet i Bergen og Kvarteret.",
+      article: "Det vil bli servert pingvin og pinnsvin til frokost.\n\nVi gleder oss til å se deg!",
+    },
   },
   en: {
-    title: "English content",
     publish: "Publish in English",
-    name: "Name",
-    imageCaption: "Image caption",
-    intro: "Introduction (short summary)",
-    article: "Event description",
-    articleHint: undefined as string | undefined,
-    location: "Location (address or meeting point)",
+    name: "Title",
+    imageCaption: "Alt-text",
+    intro: "Short summary",
+    article: "Description",
+    placeholders: {
+      name: "Breakfast meeting about the fusjonering",
+      imageCaption: "Students eating breakfast at Teglverket",
+      intro: "We are hosting a breakfast meeting about the fusion between Studentersamfunnet i Bergen and Kvarteret.",
+      article: "Penguin and hedgehog will be served.\n\nWe look forward to seeing you!",
+    },
   },
 }
 
-type LanguageFieldKey = "name" | "imageCaption" | "intro" | "location"
-const languageTextFields: LanguageFieldKey[] = ["name", "imageCaption", "intro", "location"]
+type LanguageFieldKey = "name" | "imageCaption" | "intro"
+const languageTextFields: LanguageFieldKey[] = ["name", "imageCaption", "intro"]
 
 interface LanguageTextFieldProps {
   form: EventForm
   language: Language
   fieldKey: LanguageFieldKey
   label: string
+  placeholder?: string
   required?: boolean
 }
 
-const LanguageTextField = ({ form, language, fieldKey, label, required }: LanguageTextFieldProps) => (
+const LanguageTextField = ({ form, language, fieldKey, label, placeholder, required }: LanguageTextFieldProps) => (
   <form.Field name={`${language}.${fieldKey}`}>
     {(field: any) => (
       <FieldWrapper label={label}>
@@ -46,6 +53,7 @@ const LanguageTextField = ({ form, language, fieldKey, label, required }: Langua
           value={field.state.value as string}
           onBlur={field.handleBlur}
           onChange={(e) => field.handleChange(e.target.value)}
+          placeholder={placeholder}
           required={required}
         />
       </FieldWrapper>
@@ -63,8 +71,6 @@ export const LanguageSection = ({ form, language }: LanguageSectionProps) => {
 
   return (
     <section className="space-y-6">
-      <h2 className="text-lg font-semibold">{l.title}</h2>
-
       <form.Field name={`${language}.available`}>
         {(field: any) => (
           <div className="flex items-center gap-3">
@@ -86,18 +92,21 @@ export const LanguageSection = ({ form, language }: LanguageSectionProps) => {
           language={language}
           fieldKey={fieldKey}
           label={l[fieldKey]}
-          required={fieldKey === "intro" && language === "no"}
+          placeholder={l.placeholders[fieldKey]}
+          required={language === "no" && (fieldKey === "name" || fieldKey === "intro")}
         />
       ))}
 
       <form.Field name={`${language}.article`}>
         {(field: any) => (
-          <FieldWrapper label={l.article} hint={l.articleHint}>
+          <FieldWrapper label={l.article}>
             <Textarea
               rows={6}
               value={field.state.value as string}
               onBlur={field.handleBlur}
               onChange={(e) => field.handleChange(e.target.value)}
+              placeholder={l.placeholders.article}
+              required={language === "no"}
             />
           </FieldWrapper>
         )}
