@@ -49,3 +49,9 @@ export function categorizeEvents(events: FirestoreEvent[]): StatusEvents[] {
         { status: "archived", events: archived },
     ]
 }
+
+export const READABLE_STATUS: Record<Status, string> = {
+    "in progress": "Pågår nå",
+    upcoming: "Kommende",
+    archived: "Tidligere",
+}

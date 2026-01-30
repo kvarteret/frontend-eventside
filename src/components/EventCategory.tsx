@@ -1,4 +1,4 @@
-import { capitalizeFirstLetter } from "@/lib/utils"
+import { capitalizeFirstLetter, READABLE_STATUS } from "@/lib/utils"
 import { ChevronDown, ChevronUp } from "lucide-react"
 import { EventCard } from "./EventCard"
 import type { StatusEvents } from "@/lib/services/types"
@@ -25,7 +25,7 @@ export function EventCategory({
                 onClick={toggleOpen}
             >
                 <h1 className="text-xl">
-                    {capitalizeFirstLetter(status)} events
+                    {READABLE_STATUS[status]} arrangementer
                 </h1>
                 {isOpen ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
             </div>

@@ -57,14 +57,14 @@ export const AllEvents = () => {
                 <EventCategory
                     statusEvents={ce}
                     isOpen={open.get(ce.status)!}
-                    toggleOpen={() => {
+                    toggleOpen={() =>
                         setOpen((prev) => {
                             const next = new Map(prev)
                             const isOpen = next.get(ce.status) ?? false
                             next.set(ce.status, !isOpen)
                             return next
                         })
-                    }}
+                    }
                 />
             ))}
         </div>

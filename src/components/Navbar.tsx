@@ -4,11 +4,11 @@ import { cn } from "@/lib/utils"
 
 const navItems = [
     {
-        label: "Create Event",
+        label: "Opprett",
         href: "/",
     },
     {
-        label: "All Events",
+        label: "Alle",
         href: "/events",
     },
 ]

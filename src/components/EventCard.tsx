@@ -32,7 +32,7 @@ export function EventCard({ event }: { event: FirestoreEvent }) {
 
     return (
         <Card className="p-4 rounded cursor-pointer">
-            <h1 className="">{capitalizeFirstLetter(translation.title)}</h1>
+            <h1 className="">{translation.title}</h1>
             <p className="text-xs">{translation.description}</p>
         </Card>
     )
