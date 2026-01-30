@@ -24,6 +24,11 @@ export const ERR = <E>(error: E): Result<never, E> => ({
     error,
 })
 
+export type Translations = {
+    no: FirestoreTranslation | null
+    en: FirestoreTranslation | null
+}
+
 export interface FirestoreEvent {
     id: string // Firestore doc ID
     slug: string // Auto-generated from name
@@ -48,10 +53,7 @@ export interface FirestoreEvent {
     price: string | null
 
     // Bilingual content
-    translations: {
-        no: FirestoreTranslation | null
-        en: FirestoreTranslation | null
-    }
+    translations: Translations
 }
 
 // Type for creating a new event (without id which is assigned by Firestore)
