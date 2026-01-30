@@ -24,6 +24,12 @@ export const ERR = <E>(error: E): Result<never, E> => ({
     error,
 })
 
+export type Status = "in progress" | "upcoming" | "archived"
+export type StatusEvents = {
+    status: Status
+    events: FirestoreEvent[]
+}
+
 export type Translations = {
     no: FirestoreTranslation | null
     en: FirestoreTranslation | null
