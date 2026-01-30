@@ -1,7 +1,16 @@
 import { type ClassValue, clsx } from "clsx"
 import { Timestamp } from "firebase/firestore"
 import { twMerge } from "tailwind-merge"
-import type { FirestoreEvent, Status, StatusEvents } from "./services/types"
+import {
+    ERR,
+    OK,
+    type FirestoreEvent,
+    type FirestoreTranslation,
+    type Result,
+    type Status,
+    type StatusEvents,
+    type Translations,
+} from "./services/types"
 
 export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs))
@@ -54,4 +63,13 @@ export const READABLE_STATUS: Record<Status, string> = {
     "in progress": "Pågår nå",
     upcoming: "Kommende",
     archived: "Tidligere",
+}
+
+export function getFirestoreTranslation(
+    translations: Translations,
+): Result<FirestoreTranslation> {
+    const { en, no } = translations
+    if (no !== null) return OK(no)
+    if (en !== null) return OK(en)
+    return ERR("Could not find event translation")
 }

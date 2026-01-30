@@ -6,17 +6,8 @@ import {
     ERR,
     type FirestoreEvent,
 } from "@/lib/services/types"
-import { capitalizeFirstLetter } from "@/lib/utils"
 import { Card } from "./ui/card"
-
-export function getFirestoreTranslation(
-    translations: Translations,
-): Result<FirestoreTranslation> {
-    const { en, no } = translations
-    if (no !== null) return OK(no)
-    if (en !== null) return OK(en)
-    return ERR("Could not find event translation")
-}
+import { getFirestoreTranslation } from "@/lib/utils"
 
 export function EventCard({ event }: { event: FirestoreEvent }) {
     const { translations } = event
@@ -30,10 +21,14 @@ export function EventCard({ event }: { event: FirestoreEvent }) {
         throw Error(error)
     }
 
+    const { description } = translation
+
     return (
-        <Card className="p-4 rounded cursor-pointer">
+        <Card className="p-4 rounded cursor-pointer flex flex-col gap-4">
             <h1 className="">{translation.title}</h1>
-            <p className="text-xs">{translation.description}</p>
+            {!!description && (
+                <p className="text-xs">{description.substring(0, 100)}...</p>
+            )}
         </Card>
     )
 }
