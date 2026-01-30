@@ -61,53 +61,49 @@ export const DetailsSection = ({ form }: DetailsSectionProps) => {
       <div className="grid gap-4 md:grid-cols-2">
         <form.Field name="startTime">
           {(field: any) => (
-            <FieldWrapper label="Starttid">
-              <DateTimePicker
-                value={field.state.value}
-                required
-                onChange={(date) => {
-                  field.handleChange(date)
+            <DateTimePicker
+              label="Starttid"
+              value={field.state.value}
+              required
+              onChange={(date) => {
+                field.handleChange(date)
 
-                  // Sync end time with start time on first set
-                  if (date && !hasInitializedEndTime.current) {
-                    const endTimeField = form.getFieldValue("endTime")
-                    if (!endTimeField) {
-                      const endDate = new Date(date)
-                      endDate.setHours(endDate.getHours() + 2)
-                      form.setFieldValue("endTime", endDate)
-                      hasInitializedEndTime.current = true
-                    }
+                // Sync end time with start time on first set
+                if (date && !hasInitializedEndTime.current) {
+                  const endTimeField = form.getFieldValue("endTime")
+                  if (!endTimeField) {
+                    const endDate = new Date(date)
+                    endDate.setHours(endDate.getHours() + 2)
+                    form.setFieldValue("endTime", endDate)
+                    hasInitializedEndTime.current = true
                   }
-                }}
-                placeholder="Velg starttid"
-              />
-            </FieldWrapper>
+                }
+              }}
+            />
           )}
         </form.Field>
 
         <form.Field name="endTime">
           {(field: any) => (
-            <FieldWrapper label="Slutttid">
-              <DateTimePicker
-                value={field.state.value}
-                required
-                onChange={(date) => {
-                  field.handleChange(date)
+            <DateTimePicker
+              label="Slutttid"
+              value={field.state.value}
+              required
+              onChange={(date) => {
+                field.handleChange(date)
 
-                  // Sync start time with end time on first set
-                  if (date && !hasInitializedEndTime.current) {
-                    const startTimeField = form.getFieldValue("startTime")
-                    if (!startTimeField) {
-                      const startDate = new Date(date)
-                      startDate.setHours(startDate.getHours() - 2)
-                      form.setFieldValue("startTime", startDate)
-                      hasInitializedEndTime.current = true
-                    }
+                // Sync start time with end time on first set
+                if (date && !hasInitializedEndTime.current) {
+                  const startTimeField = form.getFieldValue("startTime")
+                  if (!startTimeField) {
+                    const startDate = new Date(date)
+                    startDate.setHours(startDate.getHours() - 2)
+                    form.setFieldValue("startTime", startDate)
+                    hasInitializedEndTime.current = true
                   }
-                }}
-                placeholder="Velg slutttid"
-              />
-            </FieldWrapper>
+                }
+              }}
+            />
           )}
         </form.Field>
       </div>

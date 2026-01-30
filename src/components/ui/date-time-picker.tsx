@@ -1,76 +1,120 @@
 import * as React from "react"
+import { format } from "date-fns"
+import { nb } from "date-fns/locale"
+import { Calendar as CalendarIcon, Clock } from "lucide-react"
+import { Calendar } from "@/components/ui/calendar"
 import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { Field, FieldLabel, FieldError } from "@/components/ui/field"
+import { cn } from "@/lib/utils"
 
 interface DateTimePickerProps {
   value?: Date
   onChange: (date: Date | undefined) => void
+  label?: string
   placeholder?: string
   required?: boolean
+  error?: string
 }
 
 export function DateTimePicker({
   value,
   onChange,
+  label,
+  placeholder = "Velg dato og tid",
   required,
+  error,
 }: DateTimePickerProps) {
-  const dateValue = value
-    ? `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}-${String(value.getDate()).padStart(2, "0")}`
-    : ""
+  const [open, setOpen] = React.useState(false)
+  const [time, setTime] = React.useState(
+    value ? format(value, "HH:mm") : "12:00"
+  )
 
-  const timeValue = value
-    ? `${String(value.getHours()).padStart(2, "0")}:${String(value.getMinutes()).padStart(2, "0")}`
-    : ""
-
-  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const dateStr = e.target.value
-    if (!dateStr) {
+  const handleDateSelect = (date: Date | undefined) => {
+    if (!date) {
       onChange(undefined)
       return
     }
 
-    const [year, month, day] = dateStr.split("-").map(Number)
-    const newDate = value ? new Date(value) : new Date()
-    newDate.setFullYear(year!)
-    newDate.setMonth(month! - 1)
-    newDate.setDate(day!)
+    // Parse current time
+    const [hours, minutes] = time.split(":").map(Number)
 
-    if (!value) {
-      newDate.setHours(12)
-      newDate.setMinutes(0)
-    }
+    // Set time on selected date
+    const newDate = new Date(date)
+    newDate.setHours(hours || 12)
+    newDate.setMinutes(minutes || 0)
 
     onChange(newDate)
+    setOpen(false)
   }
 
   const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const timeStr = e.target.value
-    if (!timeStr) return
+    setTime(timeStr)
+
+    if (!value || !timeStr) return
 
     const [hours, minutes] = timeStr.split(":").map(Number)
     if (isNaN(hours!) || isNaN(minutes!)) return
 
-    const newDate = value ? new Date(value) : new Date()
+    const newDate = new Date(value)
     newDate.setHours(hours!)
     newDate.setMinutes(minutes!)
     onChange(newDate)
   }
 
   return (
-    <div className="flex gap-2">
-      <Input
-        type="date"
-        value={dateValue}
-        onChange={handleDateChange}
-        className="flex-1"
-        required={required}
-      />
-      <Input
-        type="time"
-        value={timeValue}
-        onChange={handleTimeChange}
-        className="w-28"
-        required={required}
-      />
-    </div>
+    <Field>
+      {label && (
+        <FieldLabel>
+          {label}
+          {required && " *"}
+        </FieldLabel>
+      )}
+      <div className="flex gap-2">
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className={cn(
+                "flex-1 justify-start text-left font-normal",
+                !value && "text-muted-foreground"
+              )}
+              aria-invalid={!!error}
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {value ? (
+                format(value, "PPP", { locale: nb })
+              ) : (
+                <span>{placeholder}</span>
+              )}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              selected={value}
+              onSelect={handleDateSelect}
+            />
+          </PopoverContent>
+        </Popover>
+        <div className="relative w-32">
+          <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+          <Input
+            type="time"
+            value={time}
+            onChange={handleTimeChange}
+            className="pl-9"
+            required={required}
+            aria-invalid={!!error}
+          />
+        </div>
+      </div>
+      {error && <FieldError>{error}</FieldError>}
+    </Field>
   )
 }
