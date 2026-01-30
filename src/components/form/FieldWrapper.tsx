@@ -1,4 +1,4 @@
-import { Label } from "@/components/ui/label"
+import { Field, FieldLabel, FieldDescription } from "@/components/ui/field"
 
 interface FieldWrapperProps {
   label: string
@@ -7,9 +7,9 @@ interface FieldWrapperProps {
 }
 
 export const FieldWrapper = ({ label, hint, children }: FieldWrapperProps) => (
-  <div className="space-y-2">
-    <Label>{label}</Label>
+  <Field>
+    <FieldLabel>{label}</FieldLabel>
     {children}
-    {hint && <p className="text-sm text-muted-foreground">{hint}</p>}
-  </div>
+    {hint && <FieldDescription>{hint}</FieldDescription>}
+  </Field>
 )

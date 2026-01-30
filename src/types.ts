@@ -6,20 +6,17 @@ export interface LanguageContent {
   imageCaption: string
   intro: string
   article: string
-  location: string
 }
 
 export interface EventFormValues {
-  name: string
-  category: string
-  subCategories: string
-  eventByExtra: string
-  startTime: string
-  endTime: string
+  categories: number[]
+  organizers: number[]
+  startTime: Date | undefined
+  endTime: Date | undefined
   facebookUrl: string
   price: string
   ticketsUrl: string
-  image: string
+  image: File | null
   no: LanguageContent
   en: LanguageContent
 }
