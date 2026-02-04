@@ -74,7 +74,15 @@ export function getFirestoreTranslation(
     return ERR("Could not find event translation")
 }
 
-export function eventTimeCard(date: any) { 
-    const newTime = date.toDate().toLocaleDateString()
+export function eventTimeCard(date: Timestamp) {
+    const newTime = `Dato: ${date.toDate().toLocaleDateString()}`
     return newTime
+}
+
+export function timeRemaining(date: Timestamp) {
+    const eventTime = date.toDate().getTime()
+    const currentTime = Date.now()
+    const diff = (eventTime - currentTime) / 1000
+    if (diff < 0) {return ""}
+    else return Math.round(diff / 3600)
 }
