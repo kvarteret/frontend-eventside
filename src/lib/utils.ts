@@ -73,3 +73,8 @@ export function getFirestoreTranslation(
     if (en !== null) return OK(en)
     return ERR("Could not find event translation")
 }
+
+export function eventTimeCard(date: any) { 
+    const newTime = date.toDate().toLocaleDateString()
+    return newTime
+}

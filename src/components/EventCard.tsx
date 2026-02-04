@@ -7,10 +7,10 @@ import {
     type FirestoreEvent,
 } from "@/lib/services/types"
 import { Card } from "./ui/card"
-import { getFirestoreTranslation } from "@/lib/utils"
+import { eventTimeCard, getFirestoreTranslation } from "@/lib/utils"
 
 export function EventCard({ event }: { event: FirestoreEvent }) {
-    const { translations } = event
+    const { translations, event_start: startDate } = event
     const {
         data: translation,
         ok,
@@ -29,6 +29,12 @@ export function EventCard({ event }: { event: FirestoreEvent }) {
             {!!description && (
                 <p className="text-xs">{description.substring(0, 100)}...</p>
             )}
+            <p className="text-left">
+                x dager gjenstår (hvis det er en uke igjen)
+            </p>
+            <p className="text-right">
+                {eventTimeCard(startDate)}
+            </p>
         </Card>
     )
 }
