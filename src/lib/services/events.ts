@@ -1,10 +1,29 @@
-import { collection, addDoc, getDocs, query, where, orderBy, Timestamp } from "firebase/firestore"
-import { db } from "@/lib/firebase"
-import { generateUniqueSlug } from "./slugify"
+import {
+    addDoc,
+    collection,
+    doc,
+    getDoc,
+    getDocs,
+    orderBy,
+    query,
+    Timestamp,
+    updateDoc,
+    where,
+} from "firebase/firestore"
 import { categoryOptions, organizerOptions } from "@/data/studentbergen-form"
+import { db } from "@/lib/firebase"
 import type { EventFormValues } from "@/types"
-import type { FirestoreEvent, CreateFirestoreEvent } from "./types"
+import { generateUniqueSlug } from "./slugify"
 import { uploadEventImage } from "./storage"
+import { type CreateFirestoreEvent, ERR, type FirestoreEvent, OK, type Result } from "./types"
+
+const getErrorMessage = (error: unknown): string => {
+    if (error instanceof Error) {
+        return error.message
+    }
+
+    return "Ukjent feil"
+}
 
 /**
  * Look up a category by ID
@@ -27,7 +46,13 @@ function getOrganizerById(id: number): { id: number | null; name: string } | nul
  */
 async function formToFirestore(
     formValues: EventFormValues,
-    options?: { slug?: string; imageUrl?: string | null },
+    options?: {
+        slug?: string
+        imageUrl?: string | null
+        status?: FirestoreEvent["status"]
+        createdAt?: Timestamp
+        updatedAt?: Timestamp
+    },
 ): Promise<CreateFirestoreEvent> {
     const now = Timestamp.now()
 
@@ -56,12 +81,12 @@ async function formToFirestore(
 
     return {
         slug,
-        status: "published",
+        status: options?.status ?? "published",
 
         event_start: eventStart,
         event_end: eventEnd,
-        created_at: now,
-        updated_at: now,
+        created_at: options?.createdAt ?? now,
+        updated_at: options?.updatedAt ?? now,
 
         ticket_url: formValues.ticketsUrl || null,
         facebook_url: formValues.facebookUrl || null,
@@ -115,16 +140,90 @@ export async function createEvent(formValues: EventFormValues): Promise<Firestor
 /**
  * Get all published events, ordered by start time
  */
-export async function getEvents(): Promise<FirestoreEvent[]> {
-    const eventsRef = collection(db, "events")
-    const q = query(eventsRef, where("status", "==", "published"), orderBy("event_start", "asc"))
+export async function getEvents(): Promise<Result<FirestoreEvent[]>> {
+    try {
+        const eventsRef = collection(db, "events")
+        const q = query(
+            eventsRef,
+            where("status", "==", "published"),
+            orderBy("event_start", "asc"),
+        )
 
-    const snapshot = await getDocs(q)
+        const snapshot = await getDocs(q)
 
-    return snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-    })) as FirestoreEvent[]
+        const events = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+        })) as FirestoreEvent[]
+
+        console.log(events)
+
+        return OK(events)
+    } catch (err) {
+        console.log(err)
+        return ERR(getErrorMessage(err))
+    }
+}
+
+/**
+ * Get an event by document id
+ */
+export async function getEventById(id: string): Promise<Result<FirestoreEvent>> {
+    try {
+        const eventRef = doc(db, "events", id)
+        const eventSnapshot = await getDoc(eventRef)
+
+        if (!eventSnapshot.exists()) {
+            return ERR("Fant ikke arrangementet.")
+        }
+
+        return OK({
+            id: eventSnapshot.id,
+            ...eventSnapshot.data(),
+        } as FirestoreEvent)
+    } catch (err) {
+        console.log(err)
+        return ERR(getErrorMessage(err))
+    }
+}
+
+/**
+ * Update an existing event in Firestore
+ */
+export async function updateEvent(
+    id: string,
+    formValues: EventFormValues,
+): Promise<Result<FirestoreEvent>> {
+    try {
+        const existingEventResult = await getEventById(id)
+        if (!existingEventResult.ok) {
+            return ERR(existingEventResult.error)
+        }
+
+        const existingEvent = existingEventResult.data
+        const nextImageUrl = formValues.image
+            ? await uploadEventImage(formValues.image, existingEvent.slug)
+            : (existingEvent.image?.url ?? null)
+
+        const eventData = await formToFirestore(formValues, {
+            slug: existingEvent.slug,
+            status: existingEvent.status,
+            imageUrl: nextImageUrl,
+            createdAt: existingEvent.created_at,
+            updatedAt: Timestamp.now(),
+        })
+
+        const eventRef = doc(db, "events", id)
+        await updateDoc(eventRef, eventData)
+
+        return OK({
+            id,
+            ...eventData,
+        })
+    } catch (err) {
+        console.log(err)
+        return ERR(getErrorMessage(err))
+    }
 }
 
 /**

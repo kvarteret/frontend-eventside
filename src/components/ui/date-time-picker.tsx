@@ -1,12 +1,12 @@
-import * as React from "react"
 import { format } from "date-fns"
 import { nb } from "date-fns/locale"
 import { Calendar as CalendarIcon, Clock } from "lucide-react"
-import { Calendar } from "@/components/ui/calendar"
-import { Input } from "@/components/ui/input"
+import * as React from "react"
 import { Button } from "@/components/ui/button"
+import { Calendar } from "@/components/ui/calendar"
+import { Field, FieldError, FieldLabel } from "@/components/ui/field"
+import { Input } from "@/components/ui/input"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Field, FieldLabel, FieldError } from "@/components/ui/field"
 import { cn } from "@/lib/utils"
 
 interface DateTimePickerProps {

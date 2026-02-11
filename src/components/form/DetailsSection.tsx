@@ -1,6 +1,6 @@
 import { useRef } from "react"
-import { Input } from "@/components/ui/input"
 import { DateTimePicker } from "@/components/ui/date-time-picker"
+import { Input } from "@/components/ui/input"
 import type { EventForm, EventFormValues } from "@/types"
 import { FieldWrapper } from "./FieldWrapper"
 
@@ -22,12 +22,26 @@ const detailsFields: TextFieldConfig[] = [
 interface TextFieldProps {
     form: EventForm
     config: TextFieldConfig
+    existingImageUrl?: string | null
 }
 
-const TextField = ({ form, config }: TextFieldProps) => (
+const TextField = ({ form, config, existingImageUrl }: TextFieldProps) => (
     <form.Field name={config.name}>
         {(field: any) => (
-            <FieldWrapper label={config.label}>
+            <FieldWrapper
+                label={config.label}
+                hint={
+                    config.type === "file" && existingImageUrl ? (
+                        <span>
+                            Eksisterende bilde:{" "}
+                            <a href={existingImageUrl} target="_blank" rel="noopener noreferrer">
+                                åpne bildet
+                            </a>
+                            . Velg ny fil for å erstatte.
+                        </span>
+                    ) : undefined
+                }
+            >
                 <Input
                     type={config.type}
                     placeholder={config.placeholder}
@@ -51,9 +65,10 @@ const TextField = ({ form, config }: TextFieldProps) => (
 
 interface DetailsSectionProps {
     form: EventForm
+    existingImageUrl?: string | null
 }
 
-export const DetailsSection = ({ form }: DetailsSectionProps) => {
+export const DetailsSection = ({ form, existingImageUrl }: DetailsSectionProps) => {
     const hasInitializedEndTime = useRef(false)
 
     return (
@@ -109,7 +124,12 @@ export const DetailsSection = ({ form }: DetailsSectionProps) => {
             </div>
 
             {detailsFields.map(config => (
-                <TextField key={config.name} form={form} config={config} />
+                <TextField
+                    key={config.name}
+                    form={form}
+                    config={config}
+                    existingImageUrl={existingImageUrl}
+                />
             ))}
         </section>
     )

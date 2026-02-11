@@ -1,8 +1,8 @@
-import { Field, FieldLabel, FieldDescription } from "@/components/ui/field"
+import { Field, FieldDescription, FieldLabel } from "@/components/ui/field"
 
 interface FieldWrapperProps {
     label: string
-    hint?: string
+    hint?: React.ReactNode
     children: React.ReactNode
 }
 

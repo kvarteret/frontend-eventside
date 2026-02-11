@@ -8,6 +8,33 @@ export interface FirestoreTranslation {
     image_caption: string | null
 }
 
+export type Result<T, E = string> =
+    | { ok: true; data: T; error: null }
+    | { ok: false; data: null; error: E }
+
+export const OK = <T>(data: T): Result<T, never> => ({
+    ok: true,
+    data,
+    error: null,
+})
+
+export const ERR = <E>(error: E): Result<never, E> => ({
+    ok: false,
+    data: null,
+    error,
+})
+
+export type Status = "in progress" | "upcoming" | "archived"
+export type StatusEvents = {
+    status: Status
+    events: FirestoreEvent[]
+}
+
+export type Translations = {
+    no: FirestoreTranslation | null
+    en: FirestoreTranslation | null
+}
+
 export interface FirestoreEvent {
     id: string // Firestore doc ID
     slug: string // Auto-generated from name
@@ -32,10 +59,7 @@ export interface FirestoreEvent {
     price: string | null
 
     // Bilingual content
-    translations: {
-        no: FirestoreTranslation | null
-        en: FirestoreTranslation | null
-    }
+    translations: Translations
 }
 
 // Type for creating a new event (without id which is assigned by Firestore)

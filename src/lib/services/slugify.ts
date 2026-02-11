@@ -1,5 +1,5 @@
+import { collection, getDocs, query, where } from "firebase/firestore"
 import slugify from "slugify"
-import { collection, query, where, getDocs } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 
 /**
