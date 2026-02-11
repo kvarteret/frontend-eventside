@@ -19,12 +19,13 @@ export function Calendar({ selected, onSelect, disabled, className }: CalendarPr
 
     const monthStart = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1)
     const monthEnd = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0)
+    const getMondayBasedDay = (date: Date) => (date.getDay() + 6) % 7
 
     const startDate = new Date(monthStart)
-    startDate.setDate(startDate.getDate() - monthStart.getDay())
+    startDate.setDate(startDate.getDate() - getMondayBasedDay(monthStart))
 
     const endDate = new Date(monthEnd)
-    endDate.setDate(endDate.getDate() + (6 - monthEnd.getDay()))
+    endDate.setDate(endDate.getDate() + (6 - getMondayBasedDay(monthEnd)))
 
     const dates: Date[] = []
     const current = new Date(startDate)
