@@ -1,27 +1,21 @@
 import {
-    collection,
     addDoc,
+    collection,
     doc,
     getDoc,
     getDocs,
-    query,
-    where,
     orderBy,
+    query,
     Timestamp,
     updateDoc,
+    where,
 } from "firebase/firestore"
-import { db } from "@/lib/firebase"
-import { generateUniqueSlug } from "./slugify"
 import { categoryOptions, organizerOptions } from "@/data/studentbergen-form"
+import { db } from "@/lib/firebase"
 import type { EventFormValues } from "@/types"
-import {
-    type FirestoreEvent,
-    type CreateFirestoreEvent,
-    ERR,
-    OK,
-    type Result,
-} from "./types"
+import { generateUniqueSlug } from "./slugify"
 import { uploadEventImage } from "./storage"
+import { type CreateFirestoreEvent, ERR, type FirestoreEvent, OK, type Result } from "./types"
 
 const getErrorMessage = (error: unknown): string => {
     if (error instanceof Error) {
@@ -35,17 +29,15 @@ const getErrorMessage = (error: unknown): string => {
  * Look up a category by ID
  */
 function getCategoryById(id: number): { id: number; name: string } | null {
-    const category = categoryOptions.find((c) => c.id === id)
+    const category = categoryOptions.find(c => c.id === id)
     return category ? { id: category.id, name: category.name } : null
 }
 
 /**
  * Look up an organizer by ID
  */
-function getOrganizerById(
-    id: number,
-): { id: number | null; name: string } | null {
-    const organizer = organizerOptions.find((o) => o.id === id)
+function getOrganizerById(id: number): { id: number | null; name: string } | null {
+    const organizer = organizerOptions.find(o => o.id === id)
     return organizer ? { id: organizer.id, name: organizer.name } : null
 }
 
@@ -70,12 +62,12 @@ async function formToFirestore(
 
     // Build categories array from selected IDs
     const categories = formValues.categories
-        .map((id) => getCategoryById(id))
+        .map(id => getCategoryById(id))
         .filter((c): c is { id: number; name: string } => c !== null)
 
     // Build organizers array from selected IDs (first one is primary)
     const organizers = formValues.organizers
-        .map((id) => getOrganizerById(id))
+        .map(id => getOrganizerById(id))
         .filter((o): o is { id: number | null; name: string } => o !== null)
     const organizer = organizers[0] ?? null
 
@@ -99,9 +91,7 @@ async function formToFirestore(
         ticket_url: formValues.ticketsUrl || null,
         facebook_url: formValues.facebookUrl || null,
 
-        image: options?.imageUrl
-            ? { url: options.imageUrl, __typename: "firestore" }
-            : null,
+        image: options?.imageUrl ? { url: options.imageUrl, __typename: "firestore" } : null,
 
         organizer,
         categories,
@@ -133,14 +123,10 @@ async function formToFirestore(
 /**
  * Create a new event in Firestore
  */
-export async function createEvent(
-    formValues: EventFormValues,
-): Promise<FirestoreEvent> {
+export async function createEvent(formValues: EventFormValues): Promise<FirestoreEvent> {
     const nameForSlug = formValues.no.name || formValues.en.name
     const slug = await generateUniqueSlug(nameForSlug)
-    const imageUrl = formValues.image
-        ? await uploadEventImage(formValues.image, slug)
-        : null
+    const imageUrl = formValues.image ? await uploadEventImage(formValues.image, slug) : null
     const eventData = await formToFirestore(formValues, { slug, imageUrl })
     const eventsRef = collection(db, "events")
     const docRef = await addDoc(eventsRef, eventData)
@@ -165,7 +151,7 @@ export async function getEvents(): Promise<Result<FirestoreEvent[]>> {
 
         const snapshot = await getDocs(q)
 
-        const events = snapshot.docs.map((doc) => ({
+        const events = snapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data(),
         })) as FirestoreEvent[]
@@ -217,7 +203,7 @@ export async function updateEvent(
         const existingEvent = existingEventResult.data
         const nextImageUrl = formValues.image
             ? await uploadEventImage(formValues.image, existingEvent.slug)
-            : existingEvent.image?.url ?? null
+            : (existingEvent.image?.url ?? null)
 
         const eventData = await formToFirestore(formValues, {
             slug: existingEvent.slug,
@@ -243,9 +229,7 @@ export async function updateEvent(
 /**
  * Get a single event by slug
  */
-export async function getEventBySlug(
-    slug: string,
-): Promise<FirestoreEvent | null> {
+export async function getEventBySlug(slug: string): Promise<FirestoreEvent | null> {
     const eventsRef = collection(db, "events")
     const q = query(eventsRef, where("slug", "==", slug))
 

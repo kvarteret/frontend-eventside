@@ -3,9 +3,9 @@ import { Timestamp } from "firebase/firestore"
 import { twMerge } from "tailwind-merge"
 import {
     ERR,
-    OK,
     type FirestoreEvent,
     type FirestoreTranslation,
+    OK,
     type Result,
     type Status,
     type StatusEvents,
@@ -65,9 +65,7 @@ export const READABLE_STATUS: Record<Status, string> = {
     archived: "Tidligere",
 }
 
-export function getFirestoreTranslation(
-    translations: Translations,
-): Result<FirestoreTranslation> {
+export function getFirestoreTranslation(translations: Translations): Result<FirestoreTranslation> {
     const { en, no } = translations
     if (no !== null) return OK(no)
     if (en !== null) return OK(en)

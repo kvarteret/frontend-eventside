@@ -2,23 +2,20 @@ import { getDownloadURL, ref, uploadBytes } from "firebase/storage"
 import { storage } from "@/lib/firebase"
 import { isFirebaseStorageEnabled } from "../env"
 
-export async function uploadEventImage(
-  file: File | null,
-  slug: string
-): Promise<string | null> {
-  if (!isFirebaseStorageEnabled) {
-    throw new Error("Bildeopplasting er deaktivert.")
-  }
+export async function uploadEventImage(file: File | null, slug: string): Promise<string | null> {
+    if (!isFirebaseStorageEnabled) {
+        throw new Error("Bildeopplasting er deaktivert.")
+    }
 
-  if (!file) {
-    return null
-  }
+    if (!file) {
+        return null
+    }
 
-  const timestamp = Date.now()
-  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_")
-  const objectPath = `events/${slug}/${timestamp}-${safeName}`
-  const objectRef = ref(storage, objectPath)
+    const timestamp = Date.now()
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_")
+    const objectPath = `events/${slug}/${timestamp}-${safeName}`
+    const objectRef = ref(storage, objectPath)
 
-  await uploadBytes(objectRef, file, { contentType: file.type })
-  return getDownloadURL(objectRef)
+    await uploadBytes(objectRef, file, { contentType: file.type })
+    return getDownloadURL(objectRef)
 }

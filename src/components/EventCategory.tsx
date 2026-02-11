@@ -1,7 +1,7 @@
-import { READABLE_STATUS } from "@/lib/utils"
 import { ChevronDown, ChevronUp } from "lucide-react"
-import { EventCard } from "./EventCard"
 import type { StatusEvents } from "@/lib/services/types"
+import { READABLE_STATUS } from "@/lib/utils"
+import { EventCard } from "./EventCard"
 
 export function EventCategory({
     statusEvents,
@@ -24,15 +24,13 @@ export function EventCategory({
                 className="flex px-2 flex items-center justify-between cursor-pointer"
                 onClick={toggleOpen}
             >
-                <h1 className="text-xl">
-                    {READABLE_STATUS[status]} arrangementer
-                </h1>
+                <h1 className="text-xl">{READABLE_STATUS[status]} arrangementer</h1>
                 {isOpen ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
             </div>
             <div className="border-t" />
             {isOpen && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                    {events.map((event) => (
+                    {events.map(event => (
                         <EventCard key={event.id} event={event} />
                     ))}
                 </div>

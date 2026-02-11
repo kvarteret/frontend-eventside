@@ -1,11 +1,9 @@
-import { useEffect, useState } from "react"
 import { useForm } from "@tanstack/react-form"
+import { useEffect, useState } from "react"
 import { Link, useParams } from "react-router-dom"
 import { toast } from "sonner"
 import { EventFormLayout } from "@/components/form/EventFormLayout"
-import {
-    firestoreEventToFormValues,
-} from "@/lib/event-form"
+import { firestoreEventToFormValues } from "@/lib/event-form"
 import { getEventById, updateEvent } from "@/lib/services/events"
 import type { FirestoreEvent } from "@/lib/services/types"
 import type { EventFormValues } from "@/types"
@@ -17,9 +15,7 @@ interface EditEventFormProps {
 
 function EditEventForm({ event, initialValues }: EditEventFormProps) {
     const [isSubmitting, setIsSubmitting] = useState(false)
-    const [existingImageUrl, setExistingImageUrl] = useState(
-        event.image?.url ?? null,
-    )
+    const [existingImageUrl, setExistingImageUrl] = useState(event.image?.url ?? null)
 
     const form = useForm({
         defaultValues: initialValues,
@@ -47,9 +43,7 @@ function EditEventForm({ event, initialValues }: EditEventFormProps) {
                 )
             } catch (error) {
                 const message =
-                    error instanceof Error
-                        ? error.message
-                        : "Ukjent feil ved oppdatering"
+                    error instanceof Error ? error.message : "Ukjent feil ved oppdatering"
 
                 toast.error("Kunne ikke oppdatere arrangement", {
                     description: message,
@@ -76,9 +70,7 @@ export default function EditEvent() {
     const [isLoading, setIsLoading] = useState(true)
     const [loadError, setLoadError] = useState<string | null>(null)
     const [event, setEvent] = useState<FirestoreEvent | null>(null)
-    const [initialValues, setInitialValues] = useState<EventFormValues | null>(
-        null,
-    )
+    const [initialValues, setInitialValues] = useState<EventFormValues | null>(null)
 
     useEffect(() => {
         let cancelled = false

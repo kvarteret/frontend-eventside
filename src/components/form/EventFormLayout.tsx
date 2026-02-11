@@ -1,12 +1,12 @@
 import { useState } from "react"
+import { Footer } from "@/components/Footer"
+import { BasicsSection } from "@/components/form/BasicsSection"
+import { DetailsSection } from "@/components/form/DetailsSection"
+import { LanguageSection } from "@/components/form/LanguageSection"
+import { LanguageToggle } from "@/components/LanguageToggle"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Toaster } from "@/components/ui/sonner"
-import { BasicsSection } from "@/components/form/BasicsSection"
-import { LanguageSection } from "@/components/form/LanguageSection"
-import { DetailsSection } from "@/components/form/DetailsSection"
-import { LanguageToggle } from "@/components/LanguageToggle"
-import { Footer } from "@/components/Footer"
 import type { EventForm, Language } from "@/types"
 
 interface EventFormLayoutProps {
@@ -30,7 +30,7 @@ export function EventFormLayout({
         <div className="min-h-screen bg-background p-6 md:p-10">
             <Toaster richColors />
             <form
-                onSubmit={(e) => {
+                onSubmit={e => {
                     e.preventDefault()
                     e.stopPropagation()
                     form.handleSubmit()
@@ -48,10 +48,7 @@ export function EventFormLayout({
                             </div>
                         </CardHeader>
                         <CardContent>
-                            <LanguageSection
-                                form={form}
-                                language={editingLanguage}
-                            />
+                            <LanguageSection form={form} language={editingLanguage} />
                         </CardContent>
                     </Card>
 
@@ -61,10 +58,7 @@ export function EventFormLayout({
                         </CardHeader>
                         <CardContent className="space-y-8">
                             <BasicsSection form={form} />
-                            <DetailsSection
-                                form={form}
-                                existingImageUrl={existingImageUrl}
-                            />
+                            <DetailsSection form={form} existingImageUrl={existingImageUrl} />
                         </CardContent>
                     </Card>
 

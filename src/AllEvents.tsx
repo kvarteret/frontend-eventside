@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useState } from "react"
-
-import { getEvents } from "./lib/services/events"
-import { type FirestoreEvent, type Status } from "./lib/services/types"
 import ErrorOccured from "./components/ErrorOccured"
 import { EventCategory } from "./components/EventCategory"
+import { getEvents } from "./lib/services/events"
+import { type FirestoreEvent, type Status } from "./lib/services/types"
 import { categorizeEvents } from "./lib/utils"
 
 export const AllEvents = () => {
@@ -53,13 +52,13 @@ export const AllEvents = () => {
 
     return (
         <div className="w-full h-full p-8 space-y-8">
-            {categorizedEvents.map((ce) => (
+            {categorizedEvents.map(ce => (
                 <EventCategory
                     key={ce.status}
                     statusEvents={ce}
                     isOpen={open.get(ce.status)!}
                     toggleOpen={() =>
-                        setOpen((prev) => {
+                        setOpen(prev => {
                             const next = new Map(prev)
                             const isOpen = next.get(ce.status) ?? false
                             next.set(ce.status, !isOpen)

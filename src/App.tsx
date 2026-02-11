@@ -1,8 +1,8 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom"
-import CreateEvent from "./CreateEvent"
+import { BrowserRouter, Route, Routes } from "react-router-dom"
 import AllEvents from "./AllEvents"
-import EditEvent from "./EditEvent"
+import CreateEvent from "./CreateEvent"
 import Navbar from "./components/Navbar"
+import EditEvent from "./EditEvent"
 
 export const App = () => {
     return (

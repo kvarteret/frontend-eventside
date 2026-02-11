@@ -1,5 +1,5 @@
-import { useState } from "react"
 import { useForm } from "@tanstack/react-form"
+import { useState } from "react"
 import { toast } from "sonner"
 import { EventFormLayout } from "@/components/form/EventFormLayout"
 import { createDefaultEventFormValues } from "@/lib/event-form"
@@ -27,9 +27,7 @@ export const CreateEvent = () => {
                 form.reset(createDefaultEventFormValues())
             } catch (error) {
                 const message =
-                    error instanceof Error
-                        ? error.message
-                        : "Ukjent feil ved publisering"
+                    error instanceof Error ? error.message : "Ukjent feil ved publisering"
                 toast.error("Feil ved publisering", {
                     description: message,
                 })

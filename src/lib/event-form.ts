@@ -41,13 +41,11 @@ const mapTranslationToLanguageContent = (
     }
 }
 
-export const firestoreEventToFormValues = (
-    event: FirestoreEvent,
-): EventFormValues => {
+export const firestoreEventToFormValues = (event: FirestoreEvent): EventFormValues => {
     const organizerId = event.organizer?.id
 
     return {
-        categories: event.categories.map((category) => category.id),
+        categories: event.categories.map(category => category.id),
         organizers: typeof organizerId === "number" ? [organizerId] : [],
         startTime: event.event_start.toDate(),
         endTime: event.event_end.toDate(),
