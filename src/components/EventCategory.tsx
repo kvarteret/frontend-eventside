@@ -1,4 +1,4 @@
-import { capitalizeFirstLetter, READABLE_STATUS } from "@/lib/utils"
+import { READABLE_STATUS } from "@/lib/utils"
 import { ChevronDown, ChevronUp } from "lucide-react"
 import { EventCard } from "./EventCard"
 import type { StatusEvents } from "@/lib/services/types"
@@ -32,8 +32,8 @@ export function EventCategory({
             <div className="border-t" />
             {isOpen && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                    {events.map((event, i) => (
-                        <EventCard key={i} event={event} />
+                    {events.map((event) => (
+                        <EventCard key={event.id} event={event} />
                     ))}
                 </div>
             )}

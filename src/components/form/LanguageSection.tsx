@@ -1,6 +1,6 @@
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+import { RichTextEditor } from "@/components/ui/rich-text-editor"
 import type { EventForm, Language } from "@/types"
 import { FieldWrapper } from "./FieldWrapper"
 
@@ -100,13 +100,11 @@ export const LanguageSection = ({ form, language }: LanguageSectionProps) => {
       <form.Field name={`${language}.article`}>
         {(field: any) => (
           <FieldWrapper label={l.article}>
-            <Textarea
-              rows={6}
+            <RichTextEditor
               value={field.state.value as string}
               onBlur={field.handleBlur}
-              onChange={(e) => field.handleChange(e.target.value)}
+              onChange={field.handleChange}
               placeholder={l.placeholders.article}
-              required={language === "no"}
             />
           </FieldWrapper>
         )}

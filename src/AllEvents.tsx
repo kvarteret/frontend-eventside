@@ -55,6 +55,7 @@ export const AllEvents = () => {
         <div className="w-full h-full p-8 space-y-8">
             {categorizedEvents.map((ce) => (
                 <EventCategory
+                    key={ce.status}
                     statusEvents={ce}
                     isOpen={open.get(ce.status)!}
                     toggleOpen={() =>
