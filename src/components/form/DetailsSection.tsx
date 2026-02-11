@@ -5,112 +5,112 @@ import type { EventForm, EventFormValues } from "@/types"
 import { FieldWrapper } from "./FieldWrapper"
 
 interface TextFieldConfig {
-  name: keyof EventFormValues
-  label: string
-  type?: string
-  placeholder?: string
-  required?: boolean
+    name: keyof EventFormValues
+    label: string
+    type?: string
+    placeholder?: string
+    required?: boolean
 }
 
 const detailsFields: TextFieldConfig[] = [
-  { name: "facebookUrl", label: "Lenke til event på Facebook", type: "url" },
-  { name: "price", label: "Pris" },
-  { name: "ticketsUrl", label: "Lenke til nettside eller billettkjøp", type: "url" },
-  { name: "image", label: "Bilde", type: "file" },
+    { name: "facebookUrl", label: "Lenke til event på Facebook", type: "url" },
+    { name: "price", label: "Pris" },
+    { name: "ticketsUrl", label: "Lenke til nettside eller billettkjøp", type: "url" },
+    { name: "image", label: "Bilde", type: "file" },
 ]
 
 interface TextFieldProps {
-  form: EventForm
-  config: TextFieldConfig
+    form: EventForm
+    config: TextFieldConfig
 }
 
 const TextField = ({ form, config }: TextFieldProps) => (
-  <form.Field name={config.name}>
-    {(field: any) => (
-      <FieldWrapper label={config.label}>
-        <Input
-          type={config.type}
-          placeholder={config.placeholder}
-          required={config.required}
-          value={config.type === "file" ? undefined : field.state.value}
-          onBlur={field.handleBlur}
-          accept={config.type === "file" ? "image/*" : undefined}
-          onChange={(e) => {
-            if (config.type === "file") {
-              const file = e.currentTarget.files?.[0] ?? null
-              field.handleChange(file)
-              return
-            }
-            field.handleChange(e.target.value)
-          }}
-        />
-      </FieldWrapper>
-    )}
-  </form.Field>
+    <form.Field name={config.name}>
+        {(field: any) => (
+            <FieldWrapper label={config.label}>
+                <Input
+                    type={config.type}
+                    placeholder={config.placeholder}
+                    required={config.required}
+                    value={config.type === "file" ? undefined : field.state.value}
+                    onBlur={field.handleBlur}
+                    accept={config.type === "file" ? "image/*" : undefined}
+                    onChange={e => {
+                        if (config.type === "file") {
+                            const file = e.currentTarget.files?.[0] ?? null
+                            field.handleChange(file)
+                            return
+                        }
+                        field.handleChange(e.target.value)
+                    }}
+                />
+            </FieldWrapper>
+        )}
+    </form.Field>
 )
 
 interface DetailsSectionProps {
-  form: EventForm
+    form: EventForm
 }
 
 export const DetailsSection = ({ form }: DetailsSectionProps) => {
-  const hasInitializedEndTime = useRef(false)
+    const hasInitializedEndTime = useRef(false)
 
-  return (
-    <section className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-2">
-        <form.Field name="startTime">
-          {(field: any) => (
-            <DateTimePicker
-              label="Starttid"
-              value={field.state.value}
-              required
-              onChange={(date) => {
-                field.handleChange(date)
+    return (
+        <section className="space-y-6">
+            <div className="grid gap-4 md:grid-cols-2">
+                <form.Field name="startTime">
+                    {(field: any) => (
+                        <DateTimePicker
+                            label="Starttid"
+                            value={field.state.value}
+                            required
+                            onChange={date => {
+                                field.handleChange(date)
 
-                // Sync end time with start time on first set
-                if (date && !hasInitializedEndTime.current) {
-                  const endTimeField = form.getFieldValue("endTime")
-                  if (!endTimeField) {
-                    const endDate = new Date(date)
-                    endDate.setHours(endDate.getHours() + 2)
-                    form.setFieldValue("endTime", endDate)
-                    hasInitializedEndTime.current = true
-                  }
-                }
-              }}
-            />
-          )}
-        </form.Field>
+                                // Sync end time with start time on first set
+                                if (date && !hasInitializedEndTime.current) {
+                                    const endTimeField = form.getFieldValue("endTime")
+                                    if (!endTimeField) {
+                                        const endDate = new Date(date)
+                                        endDate.setHours(endDate.getHours() + 2)
+                                        form.setFieldValue("endTime", endDate)
+                                        hasInitializedEndTime.current = true
+                                    }
+                                }
+                            }}
+                        />
+                    )}
+                </form.Field>
 
-        <form.Field name="endTime">
-          {(field: any) => (
-            <DateTimePicker
-              label="Slutttid"
-              value={field.state.value}
-              required
-              onChange={(date) => {
-                field.handleChange(date)
+                <form.Field name="endTime">
+                    {(field: any) => (
+                        <DateTimePicker
+                            label="Slutttid"
+                            value={field.state.value}
+                            required
+                            onChange={date => {
+                                field.handleChange(date)
 
-                // Sync start time with end time on first set
-                if (date && !hasInitializedEndTime.current) {
-                  const startTimeField = form.getFieldValue("startTime")
-                  if (!startTimeField) {
-                    const startDate = new Date(date)
-                    startDate.setHours(startDate.getHours() - 2)
-                    form.setFieldValue("startTime", startDate)
-                    hasInitializedEndTime.current = true
-                  }
-                }
-              }}
-            />
-          )}
-        </form.Field>
-      </div>
+                                // Sync start time with end time on first set
+                                if (date && !hasInitializedEndTime.current) {
+                                    const startTimeField = form.getFieldValue("startTime")
+                                    if (!startTimeField) {
+                                        const startDate = new Date(date)
+                                        startDate.setHours(startDate.getHours() - 2)
+                                        form.setFieldValue("startTime", startDate)
+                                        hasInitializedEndTime.current = true
+                                    }
+                                }
+                            }}
+                        />
+                    )}
+                </form.Field>
+            </div>
 
-      {detailsFields.map((config) => (
-        <TextField key={config.name} form={form} config={config} />
-      ))}
-    </section>
-  )
+            {detailsFields.map(config => (
+                <TextField key={config.name} form={form} config={config} />
+            ))}
+        </section>
+    )
 }
