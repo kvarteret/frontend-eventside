@@ -1,4 +1,3 @@
-// LoginPage.tsx
 import { useState } from "react"
 import { useUser } from "./providers/UserProvider"
 import { useNavigate } from "react-router-dom"
@@ -12,7 +11,7 @@ import {
     CardTitle,
 } from "./components/ui/card"
 
-export default function LoginPage() {
+export default function Login() {
     const { requestAccessToken, login, error, isLoading } = useUser()
     const [email, setEmail] = useState("")
     const [token, setToken] = useState("")
@@ -20,24 +19,17 @@ export default function LoginPage() {
     const navigate = useNavigate()
 
     const handleSendCode = async () => {
-        // Step 1: User enters email, clicks "Send code"
         const sent = await requestAccessToken(email)
         if (sent) {
-            setStep("token") // Move to token input
-            // User checks email, gets one-time code
+            setStep("token")
         }
-        // If !sent, error is in `error` state → display it
     }
 
     const handleLogin = async () => {
-        // Step 2: User enters token, clicks "Log in"
         const success = await login(email, token)
         if (success) {
-            // useUser().user is now populated
-            // redirect to dashboard
             navigate("/")
         }
-        // If !success, error is in `error` state → display it
     }
 
     return (

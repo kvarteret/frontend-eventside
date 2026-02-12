@@ -49,8 +49,6 @@ export async function getInternkortInformation(
     }
 }
 
-// ── Local storage helpers ──
-
 export function saveCredentials(email: string, accessToken: string): void {
     localStorage.setItem("email", email)
     localStorage.setItem("accessToken", accessToken)
