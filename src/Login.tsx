@@ -33,7 +33,7 @@ export default function Login() {
                 {step === "email" ? (
                     <>
                         <CardHeader>
-                            <CardTitle className="text-xl font-bold">Email Login</CardTitle>
+                            <CardTitle className="font-bold">Login with email</CardTitle>
                             <CardDescription>Please enter internbevis email</CardDescription>
                         </CardHeader>
                         <CardContent className="flex flex-col gap-2">
@@ -73,26 +73,28 @@ export default function Login() {
                 )}
             </Card>
 
-            <p className="text-gray-400">or</p>
-
-            <Card className="flex flex-col w-96 gap-2">
-                <CardHeader>
-                    <CardTitle>External? Login with code instead</CardTitle>
-                    <CardDescription>Please enter secret code</CardDescription>
-                </CardHeader>
-                <CardContent className="flex flex-col gap-2">
-                    <Input
-                        type="text"
-                        value={secretCode}
-                        className={"h-12"}
-                        onChange={e => setSecretCode(e.target.value)}
-                        placeholder="CODE"
-                    />
-                    <Button onClick={handleSecretCode} className={"h-12 bg-gray-600"}>
-                        Submit code
-                    </Button>
-                </CardContent>
-            </Card>
+            {/* REDUNDANT BUT AVOIDS DIV HELL */}
+            {step !== "token" && <p className="text-gray-400">or</p>}
+            {step !== "token" && (
+                <Card className="flex flex-col w-96 gap-2">
+                    <CardHeader>
+                        <CardTitle className="font-bold">Login with code</CardTitle>
+                        <CardDescription>Please enter secret</CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex flex-col gap-2">
+                        <Input
+                            type="text"
+                            value={secretCode}
+                            className={"h-12"}
+                            onChange={e => setSecretCode(e.target.value)}
+                            placeholder="Secret"
+                        />
+                        <Button onClick={handleSecretCode} className={"h-12"}>
+                            Submit code
+                        </Button>
+                    </CardContent>
+                </Card>
+            )}
         </div>
     )
 }
