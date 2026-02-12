@@ -7,11 +7,11 @@ import Login from "./Login"
 import { UserProvider, useUser } from "./providers/UserProvider"
 
 function ProtectedLayout() {
-    const { user, isLoading } = useUser()
+    const { user, isLoading, guessedCode } = useUser()
 
     if (isLoading) return <p>Loading...</p>
 
-    if (!user) return <Navigate to="/login" replace />
+    if (!user && !guessedCode) return <Navigate to="/login" replace />
 
     return (
         <>
