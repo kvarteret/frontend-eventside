@@ -30,6 +30,20 @@ export type StatusEvents = {
     events: FirestoreEvent[]
 }
 
+export type InternKortVerv = {
+    navn: string
+    gruppe: string
+    signertKontrakt: boolean
+    rabattTrinn: number
+}
+
+export type User = {
+    id: number
+    fornavn: string
+    etternavn: string
+    aktiveVerv: InternKortVerv[]
+}
+
 export type Translations = {
     no: FirestoreTranslation | null
     en: FirestoreTranslation | null
