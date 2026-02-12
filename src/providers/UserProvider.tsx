@@ -12,10 +12,14 @@ import {
 } from "@/lib/services/auth"
 import type { User } from "@/lib/services/types"
 
+const SECRET_CODE = "KVARTERET1111"
+
 interface UserContextValue {
     user: User | null
     isLoading: boolean
     error: string | null
+    guessedCode: boolean
+    submitCode: (code: string) => boolean
     requestAccessToken: (email: string) => Promise<boolean>
     login: (email: string, accessToken: string) => Promise<boolean>
     logout: () => void
@@ -29,10 +33,16 @@ export function UserProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<User | null>(null)
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
+    const [guessedCode, setGuessedCode] = useState<boolean>(false)
     const navigate = useNavigate()
 
     useEffect(() => {
         const restore = async () => {
+            const storedCode = localStorage.getItem("guessedCode")
+            if (storedCode === "true") {
+                setGuessedCode(true)
+            }
+
             const { email, accessToken } = getSavedCredentials()
             if (email && accessToken) {
                 const result = await getInternkortInformation(email, accessToken)
@@ -57,6 +67,15 @@ export function UserProvider({ children }: { children: ReactNode }) {
         return false
     }, [])
 
+    const submitCode = useCallback((code: string) => {
+        if (code === SECRET_CODE) {
+            localStorage.setItem("guessedCode", "true")
+            setGuessedCode(true)
+            return true
+        }
+        return false
+    }, [])
+
     const login = useCallback(async (email: string, accessToken: string) => {
         setError(null)
         setIsLoading(true)
@@ -77,7 +96,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         storageClearDeepLinkToken()
         setUser(null)
         setError(null)
-        navigate("/")
+        navigate("/login")
     }, [])
 
     const saveDeepLink = useCallback((token: string) => {
@@ -96,6 +115,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
                 user,
                 isLoading,
                 error,
+                guessedCode,
+                submitCode,
                 requestAccessToken,
                 login,
                 logout,

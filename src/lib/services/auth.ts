@@ -61,6 +61,7 @@ export function getSavedCredentials(): {
 }
 
 export function clearCredentials(): void {
+    localStorage.removeItem("guessedCode")
     localStorage.removeItem("email")
     localStorage.removeItem("accessToken")
 }
