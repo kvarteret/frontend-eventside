@@ -1,23 +1,16 @@
+import { createContext, type ReactNode, useCallback, useContext, useEffect, useState } from "react"
+import { useNavigate } from "react-router-dom"
 import {
-    createContext,
-    useContext,
-    useState,
-    useEffect,
-    useCallback,
-    type ReactNode,
-} from "react"
-import {
-    getSavedCredentials,
-    getInternkortInformation,
     requestAccessToken as apiRequestAccessToken,
     clearCredentials,
-    saveCredentials,
-    saveDeepLinkToken as storageSaveDeepLinkToken,
     getDeepLinkToken,
+    getInternkortInformation,
+    getSavedCredentials,
+    saveCredentials,
     clearDeepLinkToken as storageClearDeepLinkToken,
+    saveDeepLinkToken as storageSaveDeepLinkToken,
 } from "@/lib/services/auth"
 import type { User } from "@/lib/services/types"
-import { useNavigate } from "react-router-dom"
 
 interface UserContextValue {
     user: User | null
@@ -42,10 +35,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         const restore = async () => {
             const { email, accessToken } = getSavedCredentials()
             if (email && accessToken) {
-                const result = await getInternkortInformation(
-                    email,
-                    accessToken,
-                )
+                const result = await getInternkortInformation(email, accessToken)
                 if (result.ok) {
                     setUser(result.data)
                 } else {

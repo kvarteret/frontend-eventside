@@ -1,15 +1,9 @@
 import { useState } from "react"
-import { useUser } from "./providers/UserProvider"
 import { useNavigate } from "react-router-dom"
 import { Input } from "@/components/ui/input"
 import { Button } from "./components/ui/button"
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from "./components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./components/ui/card"
+import { useUser } from "./providers/UserProvider"
 
 export default function Login() {
     const { requestAccessToken, login, error, isLoading } = useUser()
@@ -41,19 +35,15 @@ export default function Login() {
                 {step === "email" ? (
                     <>
                         <CardHeader>
-                            <CardTitle className="text-xl font-bold">
-                                LOGIN
-                            </CardTitle>
-                            <CardDescription>
-                                Please enter your email
-                            </CardDescription>
+                            <CardTitle className="text-xl font-bold">LOGIN</CardTitle>
+                            <CardDescription>Please enter your email</CardDescription>
                         </CardHeader>
                         <CardContent className="flex flex-col gap-2">
                             <Input
                                 type="email"
                                 value={email}
                                 className={"h-12"}
-                                onChange={(e) => setEmail(e.target.value)}
+                                onChange={e => setEmail(e.target.value)}
                                 placeholder="name@example.com"
                             />
                             <Button onClick={handleSendCode} className={"h-12"}>
@@ -64,19 +54,17 @@ export default function Login() {
                 ) : (
                     <>
                         <CardHeader>
-                            <CardTitle className="text-xl font-bold">
-                                LOGIN
-                            </CardTitle>
+                            <CardTitle className="text-xl font-bold">LOGIN</CardTitle>
                             <CardDescription>
-                                Please enter THE CODE, recieved from email,
-                                pressing the link does not work
+                                Please enter THE CODE, recieved from email, pressing the link does
+                                not work
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="flex flex-col gap-2">
                             <Input
                                 value={token}
                                 className={"h-12"}
-                                onChange={(e) => setToken(e.target.value)}
+                                onChange={e => setToken(e.target.value)}
                                 placeholder="ZMICH2MR2ZX8QR6H4ISK6SO0U8UQ8MK2"
                             />
                             <Button onClick={handleLogin} className={"h-12"}>

@@ -22,12 +22,10 @@ export default function Navbar() {
         <header className="border-b bg-background">
             <nav className="flex justify-between items-center px-10">
                 <div className=" h-16 flex items-center gap-16">
-                    <div className="text-lg font-semibold tracking-tight">
-                        Kvarteret Events
-                    </div>
+                    <div className="text-lg font-semibold tracking-tight">Kvarteret Events</div>
 
                     <div className="flex items-center gap-1">
-                        {navItems.map((item) => {
+                        {navItems.map(item => {
                             const isActive =
                                 item.href === "/events"
                                     ? pathname.startsWith("/events")

@@ -15,9 +15,7 @@ export async function requestAccessToken(email: string): Promise<Result<null>> {
             if (err.response?.status === 404) {
                 return ERR("Email not found in the database")
             }
-            return ERR(
-                `Failed to request access token: ${err.response?.status}`,
-            )
+            return ERR(`Failed to request access token: ${err.response?.status}`)
         }
         return ERR("Network error")
     }
@@ -41,9 +39,7 @@ export async function getInternkortInformation(
             if (err.response?.status === 404) {
                 return ERR("User not found")
             }
-            return ERR(
-                `Failed to fetch user information: ${err.response?.status}`,
-            )
+            return ERR(`Failed to fetch user information: ${err.response?.status}`)
         }
         return ERR("Network error")
     }
