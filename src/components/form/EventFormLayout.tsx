@@ -15,6 +15,9 @@ interface EventFormLayoutProps {
     submitLabel: string
     submittingLabel: string
     existingImageUrl?: string | null
+    isDeleting?: boolean
+    onDelete?: () => void
+    deleteLabel?: string
 }
 
 export function EventFormLayout({
@@ -23,6 +26,9 @@ export function EventFormLayout({
     submitLabel,
     submittingLabel,
     existingImageUrl,
+    isDeleting,
+    onDelete,
+    deleteLabel = "Slett arrangement",
 }: EventFormLayoutProps) {
     const [editingLanguage, setEditingLanguage] = useState<Language>("no")
 
@@ -63,6 +69,17 @@ export function EventFormLayout({
                     </Card>
 
                     <div className="flex justify-end gap-3">
+                        {onDelete ? (
+                            <Button
+                                type="button"
+                                variant="destructive"
+                                disabled={isSubmitting || isDeleting}
+                                size="lg"
+                                onClick={onDelete}
+                            >
+                                {isDeleting ? "Sletter..." : deleteLabel}
+                            </Button>
+                        ) : null}
                         <Button type="submit" disabled={isSubmitting} size="lg">
                             {isSubmitting ? submittingLabel : submitLabel}
                         </Button>

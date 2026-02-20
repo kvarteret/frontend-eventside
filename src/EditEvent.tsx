@@ -1,10 +1,10 @@
 import { useForm } from "@tanstack/react-form"
 import { useEffect, useState } from "react"
-import { Link, useParams } from "react-router-dom"
+import { Link, useNavigate, useParams } from "react-router-dom"
 import { toast } from "sonner"
 import { EventFormLayout } from "@/components/form/EventFormLayout"
 import { firestoreEventToFormValues } from "@/lib/event-form"
-import { getEventById, updateEvent } from "@/lib/services/events"
+import { deleteEvent, getEventById, updateEvent } from "@/lib/services/events"
 import type { FirestoreEvent } from "@/lib/services/types"
 import type { EventFormValues } from "@/types"
 
@@ -15,7 +15,9 @@ interface EditEventFormProps {
 
 function EditEventForm({ event, initialValues }: EditEventFormProps) {
     const [isSubmitting, setIsSubmitting] = useState(false)
+    const [isDeleting, setIsDeleting] = useState(false)
     const [existingImageUrl, setExistingImageUrl] = useState(event.image?.url ?? null)
+    const navigate = useNavigate()
 
     const form = useForm({
         defaultValues: initialValues,
@@ -32,6 +34,7 @@ function EditEventForm({ event, initialValues }: EditEventFormProps) {
                 }
 
                 setExistingImageUrl(updateResult.data.image?.url ?? null)
+                form.setFieldValue("removeImage", false)
                 toast.success(
                     <a
                         href={`https://kvarteret.no/events/${updateResult.data.slug}`}
@@ -54,6 +57,29 @@ function EditEventForm({ event, initialValues }: EditEventFormProps) {
         },
     })
 
+    const handleDelete = async () => {
+        const confirmed = window.confirm(
+            "Er du sikker på at du vil slette arrangementet? Dette kan ikke angres.",
+        )
+        if (!confirmed) {
+            return
+        }
+
+        setIsDeleting(true)
+        const result = await deleteEvent(event.id)
+        setIsDeleting(false)
+
+        if (!result.ok) {
+            toast.error("Kunne ikke slette arrangement", {
+                description: result.error,
+            })
+            return
+        }
+
+        toast.success("Arrangementet ble slettet.")
+        navigate("/events")
+    }
+
     return (
         <EventFormLayout
             form={form}
@@ -61,6 +87,8 @@ function EditEventForm({ event, initialValues }: EditEventFormProps) {
             submitLabel="Oppdater arrangementet"
             submittingLabel="Oppdaterer..."
             existingImageUrl={existingImageUrl}
+            isDeleting={isDeleting}
+            onDelete={handleDelete}
         />
     )
 }

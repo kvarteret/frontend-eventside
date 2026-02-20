@@ -17,6 +17,7 @@ export interface EventFormValues {
     price: string
     ticketsUrl: string
     image: File | null
+    removeImage: boolean
     no: LanguageContent
     en: LanguageContent
 }

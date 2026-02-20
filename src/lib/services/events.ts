@@ -1,6 +1,7 @@
 import {
     addDoc,
     collection,
+    deleteDoc,
     doc,
     getDoc,
     getDocs,
@@ -14,7 +15,7 @@ import { categoryOptions, organizerOptions } from "@/data/studentbergen-form"
 import { db } from "@/lib/firebase"
 import type { EventFormValues } from "@/types"
 import { generateUniqueSlug } from "./slugify"
-import { uploadEventImage } from "./storage"
+import { deleteEventImageByUrl, uploadEventImage } from "./storage"
 import { type CreateFirestoreEvent, ERR, type FirestoreEvent, OK, type Result } from "./types"
 
 const getErrorMessage = (error: unknown): string => {
@@ -201,9 +202,19 @@ export async function updateEvent(
         }
 
         const existingEvent = existingEventResult.data
-        const nextImageUrl = formValues.image
-            ? await uploadEventImage(formValues.image, existingEvent.slug)
-            : (existingEvent.image?.url ?? null)
+        const existingImageUrl = existingEvent.image?.url ?? null
+        let nextImageUrl = existingImageUrl
+
+        if (formValues.image) {
+            nextImageUrl = await uploadEventImage(formValues.image, existingEvent.slug)
+
+            if (existingImageUrl && existingImageUrl !== nextImageUrl) {
+                await deleteEventImageByUrl(existingImageUrl)
+            }
+        } else if (formValues.removeImage) {
+            await deleteEventImageByUrl(existingImageUrl)
+            nextImageUrl = null
+        }
 
         const eventData = await formToFirestore(formValues, {
             slug: existingEvent.slug,
@@ -220,6 +231,27 @@ export async function updateEvent(
             id,
             ...eventData,
         })
+    } catch (err) {
+        console.log(err)
+        return ERR(getErrorMessage(err))
+    }
+}
+
+/**
+ * Delete an event and its associated image from Firebase Storage.
+ */
+export async function deleteEvent(id: string): Promise<Result<null>> {
+    try {
+        const eventResult = await getEventById(id)
+        if (!eventResult.ok) {
+            return ERR(eventResult.error)
+        }
+
+        const imageUrl = eventResult.data.image?.url ?? null
+        await deleteEventImageByUrl(imageUrl)
+        await deleteDoc(doc(db, "events", id))
+
+        return OK(null)
     } catch (err) {
         console.log(err)
         return ERR(getErrorMessage(err))
