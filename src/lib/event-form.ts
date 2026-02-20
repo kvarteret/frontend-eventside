@@ -18,6 +18,7 @@ export const createDefaultEventFormValues = (): EventFormValues => ({
     price: "",
     ticketsUrl: "",
     image: null,
+    removeImage: false,
     no: createDefaultLanguageContent(),
     en: createDefaultLanguageContent(),
 })
@@ -53,6 +54,7 @@ export const firestoreEventToFormValues = (event: FirestoreEvent): EventFormValu
         price: event.price ?? "",
         ticketsUrl: event.ticket_url ?? "",
         image: null,
+        removeImage: false,
         no: mapTranslationToLanguageContent(event.translations.no),
         en: mapTranslationToLanguageContent(event.translations.en),
     }

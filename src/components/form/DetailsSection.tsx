@@ -53,6 +53,9 @@ const TextField = ({ form, config, existingImageUrl }: TextFieldProps) => (
                         if (config.type === "file") {
                             const file = e.currentTarget.files?.[0] ?? null
                             field.handleChange(file)
+                            if (file) {
+                                form.setFieldValue("removeImage", false)
+                            }
                             return
                         }
                         field.handleChange(e.target.value)
@@ -62,6 +65,37 @@ const TextField = ({ form, config, existingImageUrl }: TextFieldProps) => (
         )}
     </form.Field>
 )
+
+interface RemoveImageFieldProps {
+    form: EventForm
+    existingImageUrl?: string | null
+}
+
+const RemoveImageField = ({ form, existingImageUrl }: RemoveImageFieldProps) => {
+    if (!existingImageUrl) {
+        return null
+    }
+
+    return (
+        <form.Field name="removeImage">
+            {(field: any) => (
+                <FieldWrapper
+                    label="Fjern eksisterende bilde"
+                    hint="Velg dette for å slette nåværende bilde ved lagring."
+                >
+                    <label className="inline-flex items-center gap-2">
+                        <input
+                            type="checkbox"
+                            checked={field.state.value}
+                            onChange={e => field.handleChange(e.target.checked)}
+                        />
+                        <span>Slett bildet fra arrangementet</span>
+                    </label>
+                </FieldWrapper>
+            )}
+        </form.Field>
+    )
+}
 
 interface DetailsSectionProps {
     form: EventForm
@@ -131,6 +165,7 @@ export const DetailsSection = ({ form, existingImageUrl }: DetailsSectionProps) 
                     existingImageUrl={existingImageUrl}
                 />
             ))}
+            <RemoveImageField form={form} existingImageUrl={existingImageUrl} />
         </section>
     )
 }
