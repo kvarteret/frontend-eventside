@@ -1,0 +1,44 @@
+services:
+  eventside:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: dev
+    container_name: kvarteret-eventside
+    restart: unless-stopped
+    profiles: ["frontend-eventside"]
+    environment:
+      NODE_ENV: development
+    ports:
+      - "3001:3000"
+    volumes:
+      - eventside_node_modules:/app/node_modules
+      - eventside_bun:/app/.bun
+    develop:
+      watch:
+        - action: sync
+          path: .
+          target: /app
+          initial_sync: true
+          ignore:
+            - node_modules/
+            - dist/
+            - .git/
+            - .bun/
+        - action: sync+restart
+          path: tailwind.config.mjs
+          target: /app/tailwind.config.mjs
+        - action: sync+restart
+          path: tsconfig.json
+          target: /app/tsconfig.json
+        - action: sync+restart
+          path: bunfig.toml
+          target: /app/bunfig.toml
+        - action: rebuild
+          path: package.json
+        - action: rebuild
+          path: bun.lock
+
+volumes:
+  eventside_node_modules:
+  eventside_bun:
