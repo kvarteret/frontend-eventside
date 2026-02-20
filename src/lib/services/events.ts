@@ -21,9 +21,6 @@ import { type CreateFirestoreEvent, ERR, type FirestoreEvent, OK, type Result } 
 
 const getErrorMessage = (error: unknown): string => {
     if (error instanceof Error) {
-        if (error.message.toLowerCase().includes("bildeopplasting er deaktivert")) {
-            return "Bildeopplasting skal være aktivert nå. Oppdater siden og prøv igjen."
-        }
         return error.message
     }
 
