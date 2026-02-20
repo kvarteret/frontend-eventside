@@ -15,19 +15,20 @@ export async function uploadEventImage(file: File | null, slug: string): Promise
     return getDownloadURL(objectRef)
 }
 
-export async function deleteEventImageByUrl(url: string | null | undefined): Promise<void> {
-    if (!url) {
+export async function deleteEventImageByUrl(url: unknown): Promise<void> {
+    if (typeof url !== "string" || !url.trim()) {
         return
     }
 
+    const normalizedUrl = url.trim()
     const isFirebaseUrl =
-        url.startsWith("gs://") ||
-        url.includes("firebasestorage.googleapis.com") ||
-        url.includes("firebasestorage.app")
+        normalizedUrl.startsWith("gs://") ||
+        normalizedUrl.includes("firebasestorage.googleapis.com") ||
+        normalizedUrl.includes("firebasestorage.app")
     if (!isFirebaseUrl) {
         return
     }
 
-    const objectRef = ref(storage, url)
+    const objectRef = ref(storage, normalizedUrl)
     await deleteObject(objectRef)
 }

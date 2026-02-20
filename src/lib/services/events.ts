@@ -5,6 +5,7 @@ import {
     doc,
     getDoc,
     getDocs,
+    limit,
     orderBy,
     query,
     Timestamp,
@@ -24,6 +25,54 @@ const getErrorMessage = (error: unknown): string => {
     }
 
     return "Ukjent feil"
+}
+
+const isIgnorableStorageDeleteError = (error: unknown): boolean => {
+    if (typeof error !== "object" || error === null) {
+        return false
+    }
+
+    const errorWithCode = error as { code?: string }
+    return (
+        errorWithCode.code === "storage/object-not-found" ||
+        errorWithCode.code === "storage/invalid-url" ||
+        errorWithCode.code === "storage/invalid-argument"
+    )
+}
+
+const canDeleteImageFromStorage = async (
+    imageUrl: string,
+    eventIdToIgnore: string,
+): Promise<boolean> => {
+    const imageQuery = query(collection(db, "events"), where("image.url", "==", imageUrl), limit(2))
+    const snapshot = await getDocs(imageQuery)
+
+    return !snapshot.docs.some(imageDoc => imageDoc.id !== eventIdToIgnore)
+}
+
+const deleteImageFromStorageIfUnused = async (
+    imageUrl: unknown,
+    eventIdToIgnore: string,
+): Promise<void> => {
+    if (typeof imageUrl !== "string" || !imageUrl.trim()) {
+        return
+    }
+
+    const normalizedUrl = imageUrl.trim()
+    const isUsedByOtherEvents = !(await canDeleteImageFromStorage(normalizedUrl, eventIdToIgnore))
+    if (isUsedByOtherEvents) {
+        return
+    }
+
+    try {
+        await deleteEventImageByUrl(normalizedUrl)
+    } catch (error) {
+        if (isIgnorableStorageDeleteError(error)) {
+            return
+        }
+
+        throw error
+    }
 }
 
 /**
@@ -209,10 +258,10 @@ export async function updateEvent(
             nextImageUrl = await uploadEventImage(formValues.image, existingEvent.slug)
 
             if (existingImageUrl && existingImageUrl !== nextImageUrl) {
-                await deleteEventImageByUrl(existingImageUrl)
+                await deleteImageFromStorageIfUnused(existingImageUrl, id)
             }
         } else if (formValues.removeImage) {
-            await deleteEventImageByUrl(existingImageUrl)
+            await deleteImageFromStorageIfUnused(existingImageUrl, id)
             nextImageUrl = null
         }
 
@@ -248,8 +297,8 @@ export async function deleteEvent(id: string): Promise<Result<null>> {
         }
 
         const imageUrl = eventResult.data.image?.url ?? null
-        await deleteEventImageByUrl(imageUrl)
         await deleteDoc(doc(db, "events", id))
+        await deleteImageFromStorageIfUnused(imageUrl, id)
 
         return OK(null)
     } catch (err) {
