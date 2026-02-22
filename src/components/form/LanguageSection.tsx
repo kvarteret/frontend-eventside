@@ -101,7 +101,7 @@ export const LanguageSection = ({ form, language }: LanguageSectionProps) => {
                     fieldKey={fieldKey}
                     label={l[fieldKey]}
                     placeholder={l.placeholders[fieldKey]}
-                    required={language === "no" && (fieldKey === "name" || fieldKey === "intro")}
+                    required={language === "no" && fieldKey === "name"}
                 />
             ))}
 

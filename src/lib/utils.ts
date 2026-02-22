@@ -65,6 +65,40 @@ export const READABLE_STATUS: Record<Status, string> = {
     archived: "Tidligere",
 }
 
+const DESCRIPTION_PREVIEW_MAX_CHARS = 200
+
+const decodeHtmlEntities = (value: string): string =>
+    value
+        .replace(/&nbsp;/gi, " ")
+        .replace(/&amp;/gi, "&")
+        .replace(/&lt;/gi, "<")
+        .replace(/&gt;/gi, ">")
+        .replace(/&quot;/gi, '"')
+        .replace(/&#39;/gi, "'")
+
+const stripHtml = (value: string): string => {
+    const withoutTags = value.replace(/<[^>]+>/g, " ")
+    const decoded = decodeHtmlEntities(withoutTags)
+    return decoded.replace(/\s+/g, " ").trim()
+}
+
+export const projectDescriptionPreview = (
+    value: string | null | undefined,
+    maxChars = DESCRIPTION_PREVIEW_MAX_CHARS,
+): string => {
+    const source = (value ?? "").trim()
+    if (!source) {
+        return ""
+    }
+
+    const normalized = stripHtml(source)
+    if (normalized.length <= maxChars) {
+        return normalized
+    }
+
+    return `${normalized.slice(0, maxChars).trimEnd()}...`
+}
+
 export function getFirestoreTranslation(translations: Translations): Result<FirestoreTranslation> {
     const { en, no } = translations
     if (no !== null) return OK(no)

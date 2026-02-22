@@ -1,4 +1,5 @@
 import type { FirestoreEvent, FirestoreTranslation } from "@/lib/services/types"
+import { projectDescriptionPreview } from "@/lib/utils"
 import type { EventFormValues, LanguageContent } from "@/types"
 
 const createDefaultLanguageContent = (): LanguageContent => ({
@@ -37,8 +38,8 @@ const mapTranslationToLanguageContent = (
         available: translation.available,
         name: translation.title,
         imageCaption: translation.image_caption ?? "",
-        intro: translation.description ?? "",
-        article: translation.content ?? "",
+        intro: projectDescriptionPreview(translation.description),
+        article: translation.description ?? "",
     }
 }
 

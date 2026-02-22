@@ -3,8 +3,7 @@ import type { Timestamp } from "firebase/firestore"
 export interface FirestoreTranslation {
     available: boolean
     title: string
-    description: string | null // intro
-    content: string | null // article
+    description: string | null // rich description/article
     image_caption: string | null
 }
 
@@ -72,7 +71,7 @@ export interface FirestoreEvent {
     categories: { id: number; name: string }[]
     price: string | null
 
-    // Bilingual content
+    // Bilingual translations
     translations: Translations
 }
 

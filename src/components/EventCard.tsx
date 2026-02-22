@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom"
 import type { FirestoreEvent } from "@/lib/services/types"
-import { getFirestoreTranslation } from "@/lib/utils"
+import { getFirestoreTranslation, projectDescriptionPreview } from "@/lib/utils"
 import { Card } from "./ui/card"
 
 export function EventCard({ event }: { event: FirestoreEvent }) {
@@ -11,13 +11,13 @@ export function EventCard({ event }: { event: FirestoreEvent }) {
         throw Error(error)
     }
 
-    const { description } = translation
+    const descriptionPreview = projectDescriptionPreview(translation.description)
 
     return (
         <Link to={`/events/${event.id}/edit`}>
             <Card className="p-4 rounded cursor-pointer flex flex-col gap-4 hover:border-primary/40 transition-colors">
                 <h1>{translation.title}</h1>
-                {!!description && <p className="text-xs">{description.substring(0, 100)}...</p>}
+                {!!descriptionPreview && <p className="text-xs">{descriptionPreview}</p>}
             </Card>
         </Link>
     )

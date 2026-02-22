@@ -152,8 +152,7 @@ async function formToFirestore(
                 ? {
                       available: true,
                       title: formValues.no.name,
-                      description: formValues.no.intro || null,
-                      content: formValues.no.article || null,
+                      description: formValues.no.article || null,
                       image_caption: formValues.no.imageCaption || null,
                   }
                 : null,
@@ -161,8 +160,7 @@ async function formToFirestore(
                 ? {
                       available: true,
                       title: formValues.en.name,
-                      description: formValues.en.intro || null,
-                      content: formValues.en.article || null,
+                      description: formValues.en.article || null,
                       image_caption: formValues.en.imageCaption || null,
                   }
                 : null,
