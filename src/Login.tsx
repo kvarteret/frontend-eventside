@@ -213,7 +213,7 @@ export default function Login() {
 
             {step === "input" && (
                 <>
-                <p className="text-gray-400">or</p>
+                <p className="text-gray-400">For users that are not volunteers at Kvarteret</p>
                 <Card className="flex flex-col w-96 gap-2">
                     <CardHeader>
                         <CardTitle className="font-bold">Login with code</CardTitle>
