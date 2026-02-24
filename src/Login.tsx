@@ -211,8 +211,9 @@ export default function Login() {
                 )}
             </Card>
 
-            {step === "input" && <p className="text-gray-400">or</p>}
             {step === "input" && (
+                <>
+                <p className="text-gray-400">or</p>
                 <Card className="flex flex-col w-96 gap-2">
                     <CardHeader>
                         <CardTitle className="font-bold">Login with code</CardTitle>
@@ -231,6 +232,7 @@ export default function Login() {
                         </Button>
                     </CardContent>
                 </Card>
+                </>
             )}
         </div>
     )
