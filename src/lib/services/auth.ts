@@ -45,17 +45,70 @@ export async function getInternkortInformation(
     }
 }
 
+export async function getInternkortInformationByPhone(
+    phone: string,
+    accessToken: string,
+): Promise<Result<User>> {
+    try {
+        const { data } = await api.post<User>("/GetInternkortInformationByPhone", {
+            phone,
+            accessToken,
+        })
+        return OK(data)
+    } catch (err) {
+        if (err instanceof AxiosError) {
+            if (err.response?.status === 401 || err.response?.status === 400) {
+                return ERR("Invalid phone number or access token")
+            }
+            return ERR(`Failed to fetch user information: ${err.response?.status}`)
+        }
+        return ERR("Network error")
+    }
+}
+
+export async function loginWithFirebaseToken(
+    idToken: string,
+): Promise<Result<{ user: User; accessToken: string }>> {
+    try {
+        const { data } = await api.post<User & { accessToken: string }>("/LoginWithFirebase", {
+            idToken,
+        })
+        const { accessToken, ...user } = data
+        if (!accessToken) {
+            return ERR("Server did not return an access token")
+        }
+        return OK({ user: user as User, accessToken })
+    } catch (err) {
+        if (err instanceof AxiosError) {
+            if (err.response?.status === 400) {
+                return ERR(err.response.data as string || "Authentication failed")
+            }
+            return ERR(`Failed to login with Firebase: ${err.response?.status}`)
+        }
+        return ERR("Network error")
+    }
+}
+
 export function saveCredentials(email: string, accessToken: string): void {
     localStorage.setItem("email", email)
     localStorage.setItem("accessToken", accessToken)
+    localStorage.removeItem("phone")
+}
+
+export function savePhoneCredentials(phone: string, accessToken: string): void {
+    localStorage.setItem("phone", phone)
+    localStorage.setItem("accessToken", accessToken)
+    localStorage.removeItem("email")
 }
 
 export function getSavedCredentials(): {
     email: string | null
+    phone: string | null
     accessToken: string | null
 } {
     return {
         email: localStorage.getItem("email"),
+        phone: localStorage.getItem("phone"),
         accessToken: localStorage.getItem("accessToken"),
     }
 }
@@ -63,17 +116,6 @@ export function getSavedCredentials(): {
 export function clearCredentials(): void {
     localStorage.removeItem("guessedCode")
     localStorage.removeItem("email")
+    localStorage.removeItem("phone")
     localStorage.removeItem("accessToken")
-}
-
-export function saveDeepLinkToken(token: string): void {
-    localStorage.setItem("deep_link_token", token)
-}
-
-export function getDeepLinkToken(): string | null {
-    return localStorage.getItem("deep_link_token")
-}
-
-export function clearDeepLinkToken(): void {
-    localStorage.removeItem("deep_link_token")
 }

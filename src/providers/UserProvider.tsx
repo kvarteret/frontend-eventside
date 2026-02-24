@@ -3,12 +3,12 @@ import { useNavigate } from "react-router-dom"
 import {
     requestAccessToken as apiRequestAccessToken,
     clearCredentials,
-    getDeepLinkToken,
     getInternkortInformation,
+    getInternkortInformationByPhone,
     getSavedCredentials,
+    loginWithFirebaseToken,
     saveCredentials,
-    clearDeepLinkToken as storageClearDeepLinkToken,
-    saveDeepLinkToken as storageSaveDeepLinkToken,
+    savePhoneCredentials,
 } from "@/lib/services/auth"
 import type { User } from "@/lib/services/types"
 
@@ -22,9 +22,8 @@ interface UserContextValue {
     submitCode: (code: string) => boolean
     requestAccessToken: (email: string) => Promise<boolean>
     login: (email: string, accessToken: string) => Promise<boolean>
+    loginWithFirebase: (idToken: string, phone: string) => Promise<boolean>
     logout: () => void
-    saveDeepLinkToken: (token: string) => void
-    consumeDeepLinkToken: () => string | null
 }
 
 const UserContext = createContext<UserContextValue | undefined>(undefined)
@@ -43,7 +42,18 @@ export function UserProvider({ children }: { children: ReactNode }) {
                 setGuessedCode(true)
             }
 
-            const { email, accessToken } = getSavedCredentials()
+            const { email, phone, accessToken } = getSavedCredentials()
+
+            if (phone && accessToken) {
+                const result = await getInternkortInformationByPhone(phone, accessToken)
+                if (result.ok) {
+                    setUser(result.data)
+                    setIsLoading(false)
+                    return
+                }
+                clearCredentials()
+            }
+
             if (email && accessToken) {
                 const result = await getInternkortInformation(email, accessToken)
                 if (result.ok) {
@@ -91,22 +101,26 @@ export function UserProvider({ children }: { children: ReactNode }) {
         return false
     }, [])
 
+    const loginWithFirebase = useCallback(async (idToken: string, phone: string) => {
+        setError(null)
+        setIsLoading(true)
+        const result = await loginWithFirebaseToken(idToken)
+        if (result.ok) {
+            savePhoneCredentials(phone, result.data.accessToken)
+            setUser(result.data.user)
+            setIsLoading(false)
+            return true
+        }
+        setError(result.error)
+        setIsLoading(false)
+        return false
+    }, [])
+
     const logout = useCallback(() => {
         clearCredentials()
-        storageClearDeepLinkToken()
         setUser(null)
         setError(null)
         navigate("/login")
-    }, [])
-
-    const saveDeepLink = useCallback((token: string) => {
-        storageSaveDeepLinkToken(token)
-    }, [])
-
-    const consumeDeepLink = useCallback(() => {
-        const token = getDeepLinkToken()
-        if (token) storageClearDeepLinkToken()
-        return token
     }, [])
 
     return (
@@ -119,9 +133,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
                 submitCode,
                 requestAccessToken,
                 login,
+                loginWithFirebase,
                 logout,
-                saveDeepLinkToken: saveDeepLink,
-                consumeDeepLinkToken: consumeDeepLink,
             }}
         >
             {children}
