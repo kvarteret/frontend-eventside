@@ -33,7 +33,7 @@ export function EventCard({ event }: { event: FirestoreEvent }) {
                 <span>{timeRemaining(startDate)} </span>
                 <div>
                     {weekday(startDate).map((day, i) => (
-                    <span key={i} className={day.active ? "text-red-600 font-bold" : "text-gray-400"} > {day.label}</span> ))}
+                        <span key={i} className={day.active ? "text-red-600 font-bold" : "text-black-400"} > {day.label}</span> ))}
                 </div>
                 <span>{eventTimeCard(startDate)}</span>
             </p>

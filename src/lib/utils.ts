@@ -11,6 +11,7 @@ import {
     type StatusEvents,
     type Translations,
 } from "./services/types"
+import { format, parse } from "date-fns"
 
 export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs))
@@ -75,8 +76,10 @@ export function getFirestoreTranslation(
 }
 
 export function eventTimeCard(date: Timestamp) {
-    const newTime = `Dato: ${date.toDate().toLocaleDateString()}`
-    return newTime
+    const newTime = date.toDate().toLocaleDateString()
+    const parsed = parse(newTime, "L/d/yyyy", new Date());
+    const outputString = format(parsed, "dd.MM.yyyy");
+    return outputString
 }
 
 export function timeRemaining(date: Timestamp) {
