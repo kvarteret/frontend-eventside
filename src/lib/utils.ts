@@ -83,6 +83,15 @@ export function timeRemaining(date: Timestamp) {
     const eventTime = date.toDate().getTime()
     const currentTime = Date.now()
     const diff = (eventTime - currentTime) / 1000
-    if (diff < 0) {return ""}
-    else return Math.round(diff / 3600)
+    const hours = diff / 3600
+    const days = hours / 24
+    if (hours < 0) return ""
+    else if (hours >= 24) return `Dager gjenstår: ${Math.round(days)}`
+    else return `Timer gjenstår: ${Math.round(hours)}`
+}
+
+export function weekday(date: Timestamp) {
+    const weekday = date.toDate().getDay()
+    const days = ["Søn", "Man", "Tir", "Ons", "Tor", "Fre", "Lør"];
+    return days.map((label, index) => ({ label, active: index === weekday }));
 }
