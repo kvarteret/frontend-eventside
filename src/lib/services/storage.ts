@@ -1,6 +1,8 @@
 import { deleteObject, getDownloadURL, ref, uploadBytes } from "firebase/storage"
 import { storage } from "@/lib/firebase"
 
+const EVENT_IMAGE_CACHE_CONTROL = "public,max-age=604800,immutable"
+
 export async function uploadEventImage(file: File | null, slug: string): Promise<string | null> {
     if (!file) {
         return null
@@ -11,7 +13,10 @@ export async function uploadEventImage(file: File | null, slug: string): Promise
     const objectPath = `events/${slug}/${timestamp}-${safeName}`
     const objectRef = ref(storage, objectPath)
 
-    await uploadBytes(objectRef, file, { contentType: file.type })
+    await uploadBytes(objectRef, file, {
+        contentType: file.type,
+        cacheControl: EVENT_IMAGE_CACHE_CONTROL,
+    })
     return getDownloadURL(objectRef)
 }
 

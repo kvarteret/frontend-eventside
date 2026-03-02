@@ -1,8 +1,8 @@
+import { type ConfirmationResult, RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth"
 import { useCallback, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { RecaptchaVerifier, signInWithPhoneNumber, type ConfirmationResult } from "firebase/auth"
-import { auth } from "@/lib/firebase"
 import { Input } from "@/components/ui/input"
+import { auth } from "@/lib/firebase"
 import { Button } from "./components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./components/ui/card"
 import { useUser } from "./providers/UserProvider"
@@ -11,8 +11,14 @@ type LoginMethod = "phone" | "email"
 type Step = "input" | "verify"
 
 export default function Login() {
-    const { requestAccessToken, login, loginWithFirebase, submitCode, error: ctxError, isLoading } =
-        useUser()
+    const {
+        requestAccessToken,
+        login,
+        loginWithFirebase,
+        submitCode,
+        error: ctxError,
+        isLoading,
+    } = useUser()
     const [method, setMethod] = useState<LoginMethod>("phone")
     const [step, setStep] = useState<Step>("input")
     const [phone, setPhone] = useState("")
@@ -213,25 +219,25 @@ export default function Login() {
 
             {step === "input" && (
                 <>
-                <p className="text-gray-400">For users that are not volunteers at Kvarteret</p>
-                <Card className="flex flex-col w-96 gap-2">
-                    <CardHeader>
-                        <CardTitle className="font-bold">Login with code</CardTitle>
-                        <CardDescription>Please enter secret</CardDescription>
-                    </CardHeader>
-                    <CardContent className="flex flex-col gap-2">
-                        <Input
-                            type="text"
-                            value={secretCode}
-                            className="h-12"
-                            onChange={e => setSecretCode(e.target.value)}
-                            placeholder="Secret"
-                        />
-                        <Button onClick={handleSecretCode} className="h-12">
-                            Submit code
-                        </Button>
-                    </CardContent>
-                </Card>
+                    <p className="text-gray-400">For users that are not volunteers at Kvarteret</p>
+                    <Card className="flex flex-col w-96 gap-2">
+                        <CardHeader>
+                            <CardTitle className="font-bold">Login with code</CardTitle>
+                            <CardDescription>Please enter secret</CardDescription>
+                        </CardHeader>
+                        <CardContent className="flex flex-col gap-2">
+                            <Input
+                                type="text"
+                                value={secretCode}
+                                className="h-12"
+                                onChange={e => setSecretCode(e.target.value)}
+                                placeholder="Secret"
+                            />
+                            <Button onClick={handleSecretCode} className="h-12">
+                                Submit code
+                            </Button>
+                        </CardContent>
+                    </Card>
                 </>
             )}
         </div>

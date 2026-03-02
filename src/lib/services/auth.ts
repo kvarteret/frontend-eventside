@@ -81,7 +81,7 @@ export async function loginWithFirebaseToken(
     } catch (err) {
         if (err instanceof AxiosError) {
             if (err.response?.status === 400) {
-                return ERR(err.response.data as string || "Authentication failed")
+                return ERR((err.response.data as string) || "Authentication failed")
             }
             return ERR(`Failed to login with Firebase: ${err.response?.status}`)
         }
