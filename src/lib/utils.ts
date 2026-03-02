@@ -109,8 +109,8 @@ export function getFirestoreTranslation(translations: Translations): Result<Fire
 
 export function eventTimeCard(date: Timestamp) {
     const newTime = date.toDate().toLocaleDateString()
-    const parsed = parse(newTime, "L/d/yyyy", new Date());
-    const outputString = format(parsed, "dd.MM.yyyy");
+    const parsed = parse(newTime, "L/d/yyyy", new Date())
+    const outputString = format(parsed, "dd.MM.yyyy")
     return outputString
 }
 
@@ -127,6 +127,6 @@ export function timeRemaining(date: Timestamp) {
 
 export function weekday(date: Timestamp) {
     const weekday = date.toDate().getDay()
-    const days = ["Søn", "Man", "Tir", "Ons", "Tor", "Fre", "Lør"];
-    return days.map((label, index) => ({ label, active: index === weekday }));
+    const days = ["Søn", "Man", "Tir", "Ons", "Tor", "Fre", "Lør"]
+    return days.map((label, index) => ({ label, active: index === weekday }))
 }
