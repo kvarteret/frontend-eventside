@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom"
 import type { FirestoreEvent } from "@/lib/services/types"
 import {
-    eventTimeCard,
+    eventDateCard,
     getFirestoreTranslation,
     projectDescriptionPreview,
     timeRemaining,
@@ -24,20 +24,13 @@ export function EventCard({ event }: { event: FirestoreEvent }) {
             <Card className="p-4 rounded cursor-pointer flex flex-col gap-4 hover:border-primary/40 transition-colors">
                 <h1 className="text-xl">{translation.title}</h1>
                 {!!descriptionPreview && <p className="text-xs">{descriptionPreview}</p>}
-                <p className="flex justify-between">
-                    <span>{timeRemaining(startDate)} </span>
-                    <div className="flex justify-between w-1/3">
-                        {weekday(startDate).map((day, i) => (
-                            <span
-                                key={i}
-                                className={day.active ? "text-red-600 font-bold" : "text-black-400"}
-                            >
-                                {day.label}
-                            </span>
-                        ))}
+                <div className="flex justify-between">
+                    <span className="justify-left">{timeRemaining(startDate)}</span>
+                    <div className="justify-right">
+                        <span className="text-red-600 font-bold">{weekday(startDate)}</span>
+                        <span>{eventDateCard(startDate)}</span>
                     </div>
-                    <span>{eventTimeCard(startDate)}</span>
-                </p>
+                </div>
             </Card>
         </Link>
     )
