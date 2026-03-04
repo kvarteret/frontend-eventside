@@ -23,7 +23,7 @@ export const ERR = <E>(error: E): Result<never, E> => ({
     error,
 })
 
-export type Status = "in progress" | "upcoming" | "archived"
+export type Status = "in progress" | "nextWeek" | "upcoming" | "archived"
 export type StatusEvents = {
     status: Status
     events: FirestoreEvent[]
