@@ -118,10 +118,8 @@ export function getFirestoreTranslation(translations: Translations): Result<Fire
 }
 
 export function eventDateCard(date: Timestamp) {
-    const newTime = date.toDate().toLocaleDateString()
-    const parsed = parse(newTime, "L/d/yyyy", new Date())
-    const outputString = format(parsed, "dd.MM.yyyy")
-    return outputString
+    const newTime = date.toDate().toLocaleDateString('no-NO')
+    return newTime
 }
 
 export function timeRemaining(date: Timestamp) {
