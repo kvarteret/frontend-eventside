@@ -27,9 +27,9 @@ export function capitalizeFirstLetter(string: string) {
 export function getEventStatus(event: FirestoreEvent): Status {
     const now = Timestamp.now()
     const { event_start: start, event_end: end } = event
-    const nextWeek = (start.seconds - now.seconds) < 604800
+    const nextWeek = start.seconds - now.seconds < 604800
 
-    if (now < start && nextWeek) return "nextWeek" 
+    if (now < start && nextWeek) return "nextWeek"
     if (now < start) return "upcoming"
     if (now > end) return "archived"
     return "in progress"
