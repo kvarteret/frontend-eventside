@@ -13,7 +13,8 @@ export const AllEvents = () => {
         () =>
             new Map<Status, boolean>([
                 ["in progress", true],
-                ["upcoming", true],
+                ["nextWeek", true],
+                ["upcoming", false],
                 ["archived", false],
             ]),
     )

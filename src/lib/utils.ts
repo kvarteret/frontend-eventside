@@ -27,7 +27,9 @@ export function capitalizeFirstLetter(string: string) {
 export function getEventStatus(event: FirestoreEvent): Status {
     const now = Timestamp.now()
     const { event_start: start, event_end: end } = event
+    const nextWeek = (start.seconds - now.seconds) < 604800
 
+    if (now < start && nextWeek) return "nextWeek" 
     if (now < start) return "upcoming"
     if (now > end) return "archived"
     return "in progress"
@@ -35,6 +37,7 @@ export function getEventStatus(event: FirestoreEvent): Status {
 
 export function categorizeEvents(events: FirestoreEvent[]): StatusEvents[] {
     const inProgress: FirestoreEvent[] = []
+    const nextWeek: FirestoreEvent[] = []
     const upcoming: FirestoreEvent[] = []
     const archived: FirestoreEvent[] = []
 
@@ -42,6 +45,11 @@ export function categorizeEvents(events: FirestoreEvent[]): StatusEvents[] {
         const status = getEventStatus(event)
         if (status === "in progress") {
             inProgress.push(event)
+            continue
+        }
+
+        if (status === "nextWeek") {
+            nextWeek.push(event)
             continue
         }
 
@@ -55,6 +63,7 @@ export function categorizeEvents(events: FirestoreEvent[]): StatusEvents[] {
 
     return [
         { status: "in progress", events: inProgress },
+        { status: "nextWeek", events: nextWeek },
         { status: "upcoming", events: upcoming },
         { status: "archived", events: archived },
     ]
@@ -62,6 +71,7 @@ export function categorizeEvents(events: FirestoreEvent[]): StatusEvents[] {
 
 export const READABLE_STATUS: Record<Status, string> = {
     "in progress": "Pågår nå",
+    nextWeek: "Neste ukes",
     upcoming: "Kommende",
     archived: "Tidligere",
 }
