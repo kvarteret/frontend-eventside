@@ -1,4 +1,10 @@
-import { BrowserRouter, Navigate, Outlet, Route, Routes } from "react-router-dom"
+import {
+    BrowserRouter,
+    Navigate,
+    Outlet,
+    Route,
+    Routes,
+} from "react-router-dom"
 import AllEvents from "./AllEvents"
 import CreateEvent from "./CreateEvent"
 import Navbar from "./components/Navbar"
@@ -22,6 +28,7 @@ function ProtectedLayout() {
 }
 
 export const App = () => {
+    //    console.log("asdasdasd,", import.meta.env.)
     return (
         <BrowserRouter>
             <UserProvider>
@@ -31,7 +38,10 @@ export const App = () => {
                     <Route element={<ProtectedLayout />}>
                         <Route path="/" element={<CreateEvent />} />
                         <Route path="/events" element={<AllEvents />} />
-                        <Route path="/events/:id/edit" element={<EditEvent />} />
+                        <Route
+                            path="/events/:id/edit"
+                            element={<EditEvent />}
+                        />
                     </Route>
 
                     <Route path="*" element={<div>Page not found</div>} />

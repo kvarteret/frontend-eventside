@@ -1,6 +1,6 @@
 import type { Timestamp } from "firebase/firestore"
 
-export interface FirestoreTranslation {
+export interface Translation {
     available: boolean
     title: string
     description: string | null // rich description/article
@@ -26,7 +26,7 @@ export const ERR = <E>(error: E): Result<never, E> => ({
 export type Status = "in progress" | "nextWeek" | "upcoming" | "archived"
 export type StatusEvents = {
     status: Status
-    events: FirestoreEvent[]
+    events: Event[]
 }
 
 export type InternKortVerv = {
@@ -36,19 +36,19 @@ export type InternKortVerv = {
     rabattTrinn: number
 }
 
-export type User = {
+export type Profile = {
     id: number
-    fornavn: string
-    etternavn: string
-    aktiveVerv: InternKortVerv[]
+    first_name: string
+    last_name: string
+    active_vervs: InternKortVerv[]
 }
 
 export type Translations = {
-    no: FirestoreTranslation | null
-    en: FirestoreTranslation | null
+    no: Translation | null
+    en: Translation | null
 }
 
-export interface FirestoreEvent {
+export type Event = {
     id: string // Firestore doc ID
     slug: string // Auto-generated from name
     status: "published" | "draft" | "archived"
@@ -76,4 +76,4 @@ export interface FirestoreEvent {
 }
 
 // Type for creating a new event (without id which is assigned by Firestore)
-export type CreateFirestoreEvent = Omit<FirestoreEvent, "id">
+//export type CreateFirestoreEvent = Omit<Event, "id">

@@ -1,10 +1,13 @@
-import { deleteObject, getDownloadURL, ref, uploadBytes } from "firebase/storage"
-import { storage } from "@/lib/firebase"
+import { deleteObject, ref } from "firebase/storage"
 
 const EVENT_IMAGE_CACHE_CONTROL = "public,max-age=604800,immutable"
 
-export async function uploadEventImage(file: File | null, slug: string): Promise<string | null> {
-    if (!file) {
+export async function uploadEventImage(
+    file: File | null,
+    slug: string,
+): Promise<string | null> {
+    return "" // IMPLEMENT FUNCTION AGAIN OR SOMETHING
+    /*if (!file) {
         return null
     }
 
@@ -17,11 +20,12 @@ export async function uploadEventImage(file: File | null, slug: string): Promise
         contentType: file.type,
         cacheControl: EVENT_IMAGE_CACHE_CONTROL,
     })
-    return getDownloadURL(objectRef)
+    return getDownloadURL(objectRef)*/
 }
 
 export async function deleteEventImageByUrl(url: unknown): Promise<void> {
-    if (typeof url !== "string" || !url.trim()) {
+    // IMPLEMENT IF STILL USED
+    /*if (typeof url !== "string" || !url.trim()) {
         return
     }
 
@@ -35,5 +39,5 @@ export async function deleteEventImageByUrl(url: unknown): Promise<void> {
     }
 
     const objectRef = ref(storage, normalizedUrl)
-    await deleteObject(objectRef)
+    await deleteObject(objectRef)*/
 }

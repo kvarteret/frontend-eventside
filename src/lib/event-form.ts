@@ -1,4 +1,4 @@
-import type { FirestoreEvent, FirestoreTranslation } from "@/lib/services/types"
+import type { Event, Translation } from "@/lib/services/types"
 import { projectDescriptionPreview } from "@/lib/utils"
 import type { EventFormValues, LanguageContent } from "@/types"
 
@@ -25,7 +25,7 @@ export const createDefaultEventFormValues = (): EventFormValues => ({
 })
 
 const mapTranslationToLanguageContent = (
-    translation: FirestoreTranslation | null,
+    translation: Translation | null,
 ): LanguageContent => {
     if (!translation) {
         return {
@@ -43,11 +43,11 @@ const mapTranslationToLanguageContent = (
     }
 }
 
-export const firestoreEventToFormValues = (event: FirestoreEvent): EventFormValues => {
+export const eventToFormValues = (event: Event): EventFormValues => {
     const organizerId = event.organizer?.id
 
     return {
-        categories: event.categories.map(category => category.id),
+        categories: event.categories.map((category) => category.id),
         organizers: typeof organizerId === "number" ? [organizerId] : [],
         startTime: event.event_start.toDate(),
         endTime: event.event_end.toDate(),

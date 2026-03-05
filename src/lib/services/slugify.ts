@@ -1,6 +1,5 @@
-import { collection, getDocs, query, where } from "firebase/firestore"
 import slugify from "slugify"
-import { db } from "@/lib/firebase"
+import { supabase } from "./events"
 
 /**
  * Generate a URL-safe slug from a name.
@@ -17,32 +16,29 @@ export async function generateUniqueSlug(name: string): Promise<string> {
         throw new Error("Could not generate slug from name")
     }
 
-    const eventsRef = collection(db, "events")
+    const { data } = await supabase
+        .from("events")
+        .select("*")
+        .eq("slug", baseSlug)
 
-    // Check if base slug exists
-    const baseQuery = query(eventsRef, where("slug", "==", baseSlug))
-    const baseSnapshot = await getDocs(baseQuery)
-
-    if (baseSnapshot.empty) {
+    if (data === null || data.length === 0) {
         return baseSlug
     }
 
-    // Find next available suffix
     let suffix = 2
-    while (true) {
+    while (suffix < 20) {
         const candidateSlug = `${baseSlug}-${suffix}`
-        const candidateQuery = query(eventsRef, where("slug", "==", candidateSlug))
-        const candidateSnapshot = await getDocs(candidateQuery)
+        const { data: events } = await supabase
+            .from("events")
+            .select("*")
+            .eq("slug", candidateSlug)
 
-        if (candidateSnapshot.empty) {
+        if (events === null || events.length === 0) {
             return candidateSlug
         }
 
         suffix++
-
-        // Safety limit to prevent infinite loops
-        if (suffix > 1000) {
-            throw new Error("Could not generate unique slug after 1000 attempts")
-        }
     }
+
+    throw new Error("Could not generate unique slug after 100 attempts")
 }

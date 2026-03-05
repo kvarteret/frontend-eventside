@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useState } from "react"
 import ErrorOccured from "./components/ErrorOccured"
 import { EventCategory } from "./components/EventCategory"
-import { getEvents } from "./lib/services/events"
-import { type FirestoreEvent, type Status } from "./lib/services/types"
+//import { getEvents } from "./lib/services/events"
+import { type Event, type Status } from "./lib/services/types"
 import { categorizeEvents } from "./lib/utils"
+import { supabase } from "./lib/services/events"
 
 export const AllEvents = () => {
     const [loading, setLoading] = useState<boolean>(false)
-    const [events, setEvents] = useState<FirestoreEvent[]>([])
+    const [events, setEvents] = useState<Event[]>([])
     const [error, setError] = useState<string | null>(null)
     const [open, setOpen] = useState<Map<Status, boolean>>(
         () =>
@@ -21,16 +22,22 @@ export const AllEvents = () => {
 
     useEffect(() => {
         async function fetchEvents() {
-            setLoading(true)
-            const eventsResult = await getEvents()
-            setLoading(false)
+            try {
+                setLoading(true)
 
-            if (!eventsResult.ok) {
-                setError(eventsResult.error)
-                return
+                const { data, error } = await supabase
+                    .from("events")
+                    .select("*")
+
+                if (error) {
+                    setError(error.message)
+                    return
+                }
+
+                setEvents(data)
+            } finally {
+                setLoading(false)
             }
-
-            setEvents(eventsResult.data)
         }
 
         fetchEvents()
@@ -53,13 +60,13 @@ export const AllEvents = () => {
 
     return (
         <div className="w-full h-full p-8 space-y-8">
-            {categorizedEvents.map(ce => (
+            {categorizedEvents.map((ce) => (
                 <EventCategory
                     key={ce.status}
                     statusEvents={ce}
                     isOpen={open.get(ce.status)!}
                     toggleOpen={() =>
-                        setOpen(prev => {
+                        setOpen((prev) => {
                             const next = new Map(prev)
                             const isOpen = next.get(ce.status) ?? false
                             next.set(ce.status, !isOpen)

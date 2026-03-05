@@ -4,12 +4,12 @@ import { Timestamp } from "firebase/firestore"
 import { twMerge } from "tailwind-merge"
 import {
     ERR,
-    type FirestoreEvent,
-    type FirestoreTranslation,
     OK,
+    type Event,
     type Result,
     type Status,
     type StatusEvents,
+    type Translation,
     type Translations,
 } from "./services/types"
 
@@ -24,7 +24,7 @@ export function capitalizeFirstLetter(string: string) {
     return string.charAt(0).toUpperCase() + string.slice(1)
 }
 
-export function getEventStatus(event: FirestoreEvent): Status {
+export function getEventStatus(event: Event): Status {
     const now = Timestamp.now()
     const { event_start: start, event_end: end } = event
     const nextWeek = start.seconds - now.seconds < 604800
@@ -35,11 +35,11 @@ export function getEventStatus(event: FirestoreEvent): Status {
     return "in progress"
 }
 
-export function categorizeEvents(events: FirestoreEvent[]): StatusEvents[] {
-    const inProgress: FirestoreEvent[] = []
-    const nextWeek: FirestoreEvent[] = []
-    const upcoming: FirestoreEvent[] = []
-    const archived: FirestoreEvent[] = []
+export function categorizeEvents(events: Event[]): StatusEvents[] {
+    const inProgress: Event[] = []
+    const nextWeek: Event[] = []
+    const upcoming: Event[] = []
+    const archived: Event[] = []
 
     for (const event of events) {
         const status = getEventStatus(event)
@@ -110,7 +110,9 @@ export const projectDescriptionPreview = (
     return `${normalized.slice(0, maxChars).trimEnd()}...`
 }
 
-export function getFirestoreTranslation(translations: Translations): Result<FirestoreTranslation> {
+export function getTranslation(
+    translations: Translations,
+): Result<Translation> {
     const { en, no } = translations
     if (no !== null) return OK(no)
     if (en !== null) return OK(en)

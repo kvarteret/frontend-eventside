@@ -3,20 +3,22 @@ import { useEffect, useState } from "react"
 import { Link, useNavigate, useParams } from "react-router-dom"
 import { toast } from "sonner"
 import { EventFormLayout } from "@/components/form/EventFormLayout"
-import { firestoreEventToFormValues } from "@/lib/event-form"
-import { deleteEvent, getEventById, updateEvent } from "@/lib/services/events"
-import type { FirestoreEvent } from "@/lib/services/types"
+import { eventToFormValues } from "@/lib/event-form"
+import { deleteEvent, supabase, updateEvent } from "@/lib/services/events"
+import type { Event } from "@/lib/services/types"
 import type { EventFormValues } from "@/types"
 
 interface EditEventFormProps {
-    event: FirestoreEvent
+    event: Event
     initialValues: EventFormValues
 }
 
 function EditEventForm({ event, initialValues }: EditEventFormProps) {
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [isDeleting, setIsDeleting] = useState(false)
-    const [existingImageUrl, setExistingImageUrl] = useState(event.image?.url ?? null)
+    const [existingImageUrl, setExistingImageUrl] = useState(
+        event.image?.url ?? null,
+    )
     const navigate = useNavigate()
 
     const form = useForm({
@@ -46,7 +48,9 @@ function EditEventForm({ event, initialValues }: EditEventFormProps) {
                 )
             } catch (error) {
                 const message =
-                    error instanceof Error ? error.message : "Ukjent feil ved oppdatering"
+                    error instanceof Error
+                        ? error.message
+                        : "Ukjent feil ved oppdatering"
 
                 toast.error("Kunne ikke oppdatere arrangement", {
                     description: message,
@@ -97,8 +101,10 @@ export default function EditEvent() {
     const { id } = useParams<{ id: string }>()
     const [isLoading, setIsLoading] = useState(true)
     const [loadError, setLoadError] = useState<string | null>(null)
-    const [event, setEvent] = useState<FirestoreEvent | null>(null)
-    const [initialValues, setInitialValues] = useState<EventFormValues | null>(null)
+    const [event, setEvent] = useState<Event | null>(null)
+    const [initialValues, setInitialValues] = useState<EventFormValues | null>(
+        null,
+    )
 
     useEffect(() => {
         let cancelled = false
@@ -111,20 +117,24 @@ export default function EditEvent() {
             }
 
             setIsLoading(true)
-            const eventResult = await getEventById(id)
+            const { data, error } = await supabase
+                .from("events")
+                .select("*")
+                .eq("id", id)
+                .single()
 
             if (cancelled) {
                 return
             }
 
-            if (!eventResult.ok) {
-                setLoadError(eventResult.error)
+            if (error) {
+                setLoadError(error.message)
                 setIsLoading(false)
                 return
             }
 
-            setEvent(eventResult.data)
-            setInitialValues(firestoreEventToFormValues(eventResult.data))
+            setEvent(data)
+            setInitialValues(eventToFormValues(data))
             setLoadError(null)
             setIsLoading(false)
         }
@@ -151,5 +161,11 @@ export default function EditEvent() {
         )
     }
 
-    return <EditEventForm key={event.id} event={event} initialValues={initialValues} />
+    return (
+        <EditEventForm
+            key={event.id}
+            event={event}
+            initialValues={initialValues}
+        />
+    )
 }
