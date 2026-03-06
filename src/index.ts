@@ -1,11 +1,9 @@
 import { serve } from "bun"
 import index from "./index.html"
+import { FeedbackValidationError, forwardFeedbackToSlack } from "./lib/server/slack-feedback"
 
 const server = serve({
     routes: {
-        // Serve index.html for all unmatched routes.
-        "/*": index,
-
         "/api/hello": {
             async GET(req) {
                 return Response.json({
@@ -27,6 +25,32 @@ const server = serve({
                 message: `Hello, ${name}!`,
             })
         },
+
+        "/api/feedback": {
+            async POST(req) {
+                try {
+                    const payload = await req.json()
+                    await forwardFeedbackToSlack(payload)
+                    return Response.json({ ok: true })
+                } catch (error) {
+                    if (error instanceof FeedbackValidationError) {
+                        return Response.json({ error: error.message }, { status: 400 })
+                    }
+
+                    console.error("Failed to send feedback to Slack", error)
+
+                    return Response.json(
+                        {
+                            error: "Could not send feedback right now. Please try again shortly.",
+                        },
+                        { status: 500 },
+                    )
+                }
+            },
+        },
+
+        // Serve index.html for all unmatched routes.
+        "/*": index,
     },
 
     development: process.env.NODE_ENV !== "production" && {

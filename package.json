@@ -7,9 +7,9 @@
         "dev": "bun --hot src/index.ts",
         "start": "NODE_ENV=production bun src/index.ts",
         "build": "bun run build.ts",
-        "lint": "bunx @biomejs/biome check .",
-        "lint:ci": "bunx @biomejs/biome ci .",
-        "format": "bunx @biomejs/biome format --write ."
+        "lint": "biome check .",
+        "lint:ci": "biome ci .",
+        "format": "biome format --write ."
     },
     "dependencies": {
         "@base-ui/react": "^1.1.0",
