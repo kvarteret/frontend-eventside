@@ -42,6 +42,7 @@ export const CreateEvent = () => {
             isSubmitting={isSubmitting}
             submitLabel="Publiser arrangementet"
             submittingLabel="Publiserer..."
+            feedbackPage="/"
         />
     )
 }
