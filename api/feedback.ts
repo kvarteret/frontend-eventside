@@ -1,4 +1,4 @@
-import { FeedbackValidationError, forwardFeedbackToSlack } from "../src/lib/server/slack-feedback"
+import { FeedbackValidationError, forwardFeedbackToSlack } from "./_lib/slack-feedback"
 
 /**
  * Handles feedback submissions for Vercel deployments.

@@ -1,6 +1,6 @@
 import { serve } from "bun"
+import { FeedbackValidationError, forwardFeedbackToSlack } from "../api/_lib/slack-feedback"
 import index from "./index.html"
-import { FeedbackValidationError, forwardFeedbackToSlack } from "./lib/server/slack-feedback"
 
 const server = serve({
     routes: {
