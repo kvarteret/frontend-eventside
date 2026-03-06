@@ -1,11 +1,9 @@
 import { serve } from "bun"
+import { POST as handleFeedbackPost } from "../api/feedback"
 import index from "./index.html"
 
 const server = serve({
     routes: {
-        // Serve index.html for all unmatched routes.
-        "/*": index,
-
         "/api/hello": {
             async GET(req) {
                 return Response.json({
@@ -27,6 +25,15 @@ const server = serve({
                 message: `Hello, ${name}!`,
             })
         },
+
+        "/api/feedback": {
+            async POST(req) {
+                return handleFeedbackPost(req)
+            },
+        },
+
+        // Serve index.html for all unmatched routes.
+        "/*": index,
     },
 
     development: process.env.NODE_ENV !== "production" && {

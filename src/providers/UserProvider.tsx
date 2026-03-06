@@ -6,6 +6,8 @@ import {
     getDeepLinkToken,
     getInternkortInformation,
     getSavedCredentials,
+    getSavedUser,
+    saveCachedUser,
     saveCredentials,
     clearDeepLinkToken as storageClearDeepLinkToken,
     saveDeepLinkToken as storageSaveDeepLinkToken,
@@ -13,6 +15,7 @@ import {
 import type { User } from "@/lib/services/types"
 
 const SECRET_CODE = "KVARTERET1111"
+const SESSION_RESET_ERRORS = new Set(["Invalid or expired access token", "User not found"])
 
 interface UserContextValue {
     user: User | null
@@ -37,24 +40,53 @@ export function UserProvider({ children }: { children: ReactNode }) {
     const navigate = useNavigate()
 
     useEffect(() => {
+        let isActive = true
+
         const restore = async () => {
             const storedCode = localStorage.getItem("guessedCode")
-            if (storedCode === "true") {
+            if (storedCode === "true" && isActive) {
                 setGuessedCode(true)
             }
 
+            const cachedUser = getSavedUser()
+            if (cachedUser && isActive) {
+                setUser(cachedUser)
+                setIsLoading(false)
+            }
+
             const { email, accessToken } = getSavedCredentials()
-            if (email && accessToken) {
-                const result = await getInternkortInformation(email, accessToken)
-                if (result.ok) {
-                    setUser(result.data)
-                } else {
-                    clearCredentials()
+            if (!email || !accessToken) {
+                setIsLoading(false)
+                return
+            }
+
+            const result = await getInternkortInformation(email, accessToken)
+            if (!isActive) {
+                return
+            }
+
+            if (result.ok) {
+                setUser(result.data)
+                saveCachedUser(result.data)
+                setError(null)
+            } else if (SESSION_RESET_ERRORS.has(result.error)) {
+                setUser(null)
+                setGuessedCode(false)
+                clearCredentials()
+            } else {
+                if (!cachedUser) {
+                    setError(result.error)
                 }
             }
+
             setIsLoading(false)
         }
+
         restore()
+
+        return () => {
+            isActive = false
+        }
     }, [])
 
     const requestAccessToken = useCallback(async (email: string) => {
@@ -81,7 +113,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         setIsLoading(true)
         const result = await getInternkortInformation(email, accessToken)
         if (result.ok) {
-            saveCredentials(email, accessToken)
+            saveCredentials(email, accessToken, result.data)
             setUser(result.data)
             setIsLoading(false)
             return true

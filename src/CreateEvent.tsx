@@ -4,7 +4,6 @@ import { toast } from "sonner"
 import { EventFormLayout } from "@/components/form/EventFormLayout"
 import { createDefaultEventFormValues } from "@/lib/event-form"
 import { createEvent } from "@/lib/services/events"
-import "./index.css"
 
 export const CreateEvent = () => {
     const [isSubmitting, setIsSubmitting] = useState(false)
@@ -43,6 +42,7 @@ export const CreateEvent = () => {
             isSubmitting={isSubmitting}
             submitLabel="Publiser arrangementet"
             submittingLabel="Publiserer..."
+            feedbackPage="/"
         />
     )
 }
