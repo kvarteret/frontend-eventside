@@ -4,7 +4,7 @@ import { Link, useNavigate, useParams } from "react-router-dom"
 import { toast } from "sonner"
 import { EventFormLayout } from "@/components/form/EventFormLayout"
 import { eventToFormValues } from "@/lib/event-form"
-import { deleteEvent, supabase, updateEvent } from "@/lib/services/events"
+import { supabase, updateEvent } from "@/lib/services/events"
 import type { Event } from "@/lib/services/types"
 import type { EventFormValues } from "@/types"
 
@@ -70,12 +70,17 @@ function EditEventForm({ event, initialValues }: EditEventFormProps) {
         }
 
         setIsDeleting(true)
-        const result = await deleteEvent(event.id)
+
+        const { error } = await supabase
+            .from("events")
+            .delete()
+            .eq("id", event.id)
+
         setIsDeleting(false)
 
-        if (!result.ok) {
+        if (error) {
             toast.error("Kunne ikke slette arrangement", {
-                description: result.error,
+                description: error.message,
             })
             return
         }

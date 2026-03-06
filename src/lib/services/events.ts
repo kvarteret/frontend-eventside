@@ -41,51 +41,6 @@ const canDeleteImageFromStorage = (
     // IMPLEMENT WHEN HAVING DECIDED ON IMAGE STORAGE
 }
 
-/*const canDeleteImageFromStorage = async (
-    imageUrl: string,
-    eventIdToIgnore: string,
-): Promise<boolean> => {
-    const imageQuery = query(
-        collection(db, "events"),
-        where("image.url", "==", imageUrl),
-        limit(2),
-    )
-    const snapshot = await getDocs(imageQuery)
-
-    return !snapshot.docs.some((imageDoc) => imageDoc.id !== eventIdToIgnore)
-}*/
-
-/*const deleteImageFromStorageIfUnused = async (
-    imageUrl: unknown,
-    eventIdToIgnore: string,
-): Promise<void> => {
-    if (typeof imageUrl !== "string" || !imageUrl.trim()) {
-        return
-    }
-
-    const normalizedUrl = imageUrl.trim()
-    const isUsedByOtherEvents = !(await canDeleteImageFromStorage(
-        normalizedUrl,
-        eventIdToIgnore,
-    ))
-    if (isUsedByOtherEvents) {
-        return
-    }
-
-    try {
-        await deleteEventImageByUrl(normalizedUrl)
-    } catch (error) {
-        if (isIgnorableStorageDeleteError(error)) {
-            return
-        }
-
-        throw error
-    }
-}*/
-
-/**
- * Look up a category by ID
- */
 function getCategoryById(id: number): { id: number; name: string } | null {
     const category = categoryOptions.find((c) => c.id === id)
     return category ? { id: category.id, name: category.name } : null
@@ -110,11 +65,11 @@ async function formToEvent(
         slug?: string
         imageUrl?: string | null
         status?: Event["status"]
-        createdAt?: Timestamp
-        updatedAt?: Timestamp
+        createdAt?: string
+        updatedAt?: string
     },
 ): Promise<Event> {
-    const now = Timestamp.now()
+    const now = new Date().toISOString()
 
     // Generate slug from Norwegian or English name
     const nameForSlug = formValues.no.name || formValues.en.name
@@ -136,8 +91,8 @@ async function formToEvent(
     }
 
     // Parse timestamps
-    const eventStart = Timestamp.fromDate(formValues.startTime)
-    const eventEnd = Timestamp.fromDate(formValues.endTime)
+    const eventStart = formValues.startTime.toISOString()
+    const eventEnd = formValues.endTime.toISOString()
 
     // TODO FIX IMAGE BECAUSE WHAT IS THIS, BECAUSE I HAVE NO IDEA THIS COMMENT WILL STAY RIDICILOUS BECAUSE THIS HAS TO BE FIXED
     return {
@@ -207,62 +162,6 @@ export async function createEvent(
 }
 
 /**
- * Get all published events, ordered by start time
- */
-/*export async function getEvents(): Promise<Result<Event[]>> {
-    const { data, error } = supabase.from("events").select("*")
-
-    if (error) {
-        return ERR(error)
-    }
-
-    try {
-        const eventsRef = collection(db, "events")
-        const q = query(
-            eventsRef,
-            where("status", "==", "published"),
-            orderBy("event_start", "asc"),
-        )
-
-        const snapshot = await getDocs(q)
-
-        const events = snapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-        })) as Event[]
-
-        console.log(events)
-
-        return OK(events)
-    } catch (err) {
-        console.log(err)
-        return ERR(getErrorMessage(err))
-    }
-}*/
-
-/**
- * Get an event by document id
- */
-/*export async function getEventById(id: string): Promise<Result<Event>> {
-    try {
-        const eventRef = doc(db, "events", id)
-        const eventSnapshot = await getDoc(eventRef)
-
-        if (!eventSnapshot.exists()) {
-            return ERR("Fant ikke arrangementet.")
-        }
-
-        return OK({
-            id: eventSnapshot.id,
-            ...eventSnapshot.data(),
-        } as Event)
-    } catch (err) {
-        console.log(err)
-        return ERR(getErrorMessage(err))
-    }
-}*/
-
-/**
  * Update an existing event in Firestore
  */
 function deleteImageFromStorageIfUnused(a: any, b: any) {
@@ -306,7 +205,7 @@ export async function updateEvent(
             status: existingEvent.status,
             imageUrl: nextImageUrl,
             createdAt: existingEvent.created_at,
-            updatedAt: Timestamp.now(),
+            updatedAt: new Date().toISOString(),
         })
 
         const { data, error } = await supabase
@@ -326,54 +225,3 @@ export async function updateEvent(
         return ERR(getErrorMessage(err))
     }
 }
-
-/**
- * Delete an event and its associated image from Firebase Storage.
- */
-export async function deleteEvent(id: string): Promise<Result<null>> {
-    const { error } = await supabase.from("events").select("*").eq("id", id)
-
-    if (error) {
-        return ERR(error.message)
-    }
-
-    return OK(null)
-
-    // SOME SEPERATE LOGIC IS PROBABLY NEEDED FOR DELETING IMAGES
-    /*const imageUrl = eventResult.data.image?.url ?? null
-        await deleteDoc(doc(db, "events", id))
-        await deleteImageFromStorageIfUnused(imageUrl, id)*/
-}
-
-/**
- * Get a single event by slug
- */
-/*export async function getEventBySlug(slug: string): Promise<Event | null> {
-    const eventsRef = collection(db, "events")
-    const q = query(eventsRef, where("slug", "==", slug))
-
-    const snapshot = await getDocs(q)
-
-    const firstDoc = snapshot.docs[0]
-    if (!firstDoc) {
-        return null
-    }
-
-    return {
-        id: firstDoc.id,
-        ...firstDoc.data(),
-    } as Event
-}*/
-
-/*export async function getEventsBySlug(slug: string): Promise<Result<Event>> {
-    const { data, error } = await supabase
-        .from("events")
-        .select("*")
-        .eq("slug", slug)
-        .single()
-
-    if (error) {
-        return ERR(error.message)
-    }
-    return OK(data)
-}*/
