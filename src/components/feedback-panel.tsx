@@ -29,7 +29,7 @@ export function FeedbackPanel({ page }: FeedbackPanelProps) {
         if (!trimmedMessage) {
             setSubmitState({
                 kind: "error",
-                message: "Skriv hva du ønsker endret, forbedret eller fikset først.",
+                message: "Du må skrive noe først. Ugetit?.",
             })
             return
         }
@@ -57,7 +57,7 @@ export function FeedbackPanel({ page }: FeedbackPanelProps) {
         setMessage("")
         setSubmitState({
             kind: "success",
-            message: "Takk. Meldingen er sendt til E-tjenesten.",
+            message: "Melding sendt!.",
         })
     }
 
@@ -65,7 +65,7 @@ export function FeedbackPanel({ page }: FeedbackPanelProps) {
         <Card className="border-border/80 bg-card/95 gap-5 backdrop-blur supports-backdrop-filter:bg-card/85">
             <CardHeader className="gap-3">
                 <div className="text-muted-foreground text-xs font-semibold tracking-[0.18em] uppercase">
-                    E-tjenesten
+                    Feedback
                 </div>
                 <CardTitle className="text-2xl font-semibold">Gi oss en lyd</CardTitle>
                 <CardDescription className="space-y-3 text-sm leading-6">
@@ -95,11 +95,11 @@ export function FeedbackPanel({ page }: FeedbackPanelProps) {
                     </label>
 
                     <label className="flex flex-col gap-2 text-sm font-medium">
-                        Hva vil du endre, forbedre eller fikse?
+                        Ris / Ros goes here:
                         <Textarea
                             value={message}
                             onChange={event => setMessage(event.target.value)}
-                            placeholder="Skriv meldingen din her..."
+                            placeholder="blahblahblah"
                             className="min-h-36 resize-y"
                         />
                     </label>
