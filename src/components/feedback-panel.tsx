@@ -99,7 +99,7 @@ export function FeedbackPanel({ page }: FeedbackPanelProps) {
                         <Textarea
                             value={message}
                             onChange={event => setMessage(event.target.value)}
-                            placeholder="blahblahblah"
+                            placeholder="Slay on 🚀"
                             className="min-h-36 resize-y"
                         />
                     </label>
