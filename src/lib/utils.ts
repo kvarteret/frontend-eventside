@@ -118,7 +118,7 @@ export function getFirestoreTranslation(translations: Translations): Result<Fire
 }
 
 export function eventDateCard(date: Timestamp) {
-    const newTime = date.toDate().toLocaleDateString('no-NO')
+    const newTime = date.toDate().toLocaleDateString("no-NO")
     return newTime
 }
 
