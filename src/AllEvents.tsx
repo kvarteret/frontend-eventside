@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 import ErrorOccured from "./components/ErrorOccured"
 import { EventCategory } from "./components/EventCategory"
-//import { getEvents } from "./lib/services/events"
 import { type Event, type Status } from "./lib/services/types"
 import { categorizeEvents } from "./lib/utils"
 import { supabase } from "./lib/services/events"

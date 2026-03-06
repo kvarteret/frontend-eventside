@@ -1,5 +1,3 @@
-import type { Timestamp } from "firebase/firestore"
-
 export interface Translation {
     available: boolean
     title: string
@@ -36,6 +34,13 @@ export type InternKortVerv = {
     rabattTrinn: number
 }
 
+export type User = {
+    id: number
+    fornavn: string
+    etternavn: string
+    aktiveVerv: InternKortVerv[]
+}
+
 export type Profile = {
     id: number
     first_name: string
@@ -53,11 +58,11 @@ export type Event = {
     slug: string // Auto-generated from name
     status: "published" | "draft" | "archived"
 
-    // Timestamps
-    event_start: Timestamp
-    event_end: Timestamp
-    created_at: Timestamp
-    updated_at: Timestamp
+    // Timestamps: isoStrings
+    event_start: string
+    event_end: string
+    created_at: string
+    updated_at: string
 
     // Links
     ticket_url: string | null

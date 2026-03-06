@@ -49,8 +49,8 @@ export const eventToFormValues = (event: Event): EventFormValues => {
     return {
         categories: event.categories.map((category) => category.id),
         organizers: typeof organizerId === "number" ? [organizerId] : [],
-        startTime: event.event_start.toDate(),
-        endTime: event.event_end.toDate(),
+        startTime: new Date(event.event_start),
+        endTime: new Date(event.event_end),
         facebookUrl: event.facebook_url ?? "",
         price: event.price ?? "",
         ticketsUrl: event.ticket_url ?? "",

@@ -1,4 +1,11 @@
-import { createContext, type ReactNode, useCallback, useContext, useEffect, useState } from "react"
+import {
+    createContext,
+    type ReactNode,
+    useCallback,
+    useContext,
+    useEffect,
+    useState,
+} from "react"
 import { useNavigate } from "react-router-dom"
 import {
     requestAccessToken as apiRequestAccessToken,
@@ -45,7 +52,10 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
             const { email, accessToken } = getSavedCredentials()
             if (email && accessToken) {
-                const result = await getInternkortInformation(email, accessToken)
+                const result = await getInternkortInformation(
+                    email,
+                    accessToken,
+                )
                 if (result.ok) {
                     setUser(result.data)
                 } else {
