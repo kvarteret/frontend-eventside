@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { Navigate, useNavigate } from "react-router-dom"
 import { FeedbackPanel } from "@/components/feedback-panel"
 import { Input } from "@/components/ui/input"
 import { Button } from "./components/ui/button"
@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./com
 import { useUser } from "./providers/UserProvider"
 
 export default function Login() {
-    const { requestAccessToken, login, submitCode, error, isLoading } = useUser()
+    const { requestAccessToken, login, submitCode, error, isLoading, user, guessedCode } = useUser()
     const [email, setEmail] = useState("")
     const [token, setToken] = useState("")
     const [step, setStep] = useState<"email" | "token">("email")
@@ -24,6 +24,10 @@ export default function Login() {
     const onSuccess = (success: boolean) => (success ? navigate("/") : {})
     const handleLogin = async () => onSuccess(await login(email, token))
     const handleSecretCode = () => onSuccess(submitCode(secretCode))
+
+    if (!isLoading && (user || guessedCode)) {
+        return <Navigate to="/" replace />
+    }
 
     return (
         <main className="min-h-screen bg-background">
