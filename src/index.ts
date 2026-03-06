@@ -1,5 +1,5 @@
 import { serve } from "bun"
-import { FeedbackValidationError, forwardFeedbackToSlack } from "../api/_lib/slack-feedback"
+import { POST as handleFeedbackPost } from "../api/feedback"
 import index from "./index.html"
 
 const server = serve({
@@ -28,24 +28,7 @@ const server = serve({
 
         "/api/feedback": {
             async POST(req) {
-                try {
-                    const payload = await req.json()
-                    await forwardFeedbackToSlack(payload)
-                    return Response.json({ ok: true })
-                } catch (error) {
-                    if (error instanceof FeedbackValidationError) {
-                        return Response.json({ error: error.message }, { status: 400 })
-                    }
-
-                    console.error("Failed to send feedback to Slack", error)
-
-                    return Response.json(
-                        {
-                            error: "Could not send feedback right now. Please try again shortly.",
-                        },
-                        { status: 500 },
-                    )
-                }
+                return handleFeedbackPost(req)
             },
         },
 
