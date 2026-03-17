@@ -2,16 +2,23 @@ import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Input } from "@/components/ui/input"
 import { Button } from "./components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./components/ui/card"
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from "./components/ui/card"
 import { supabase } from "./lib/services/events"
 import { useUser } from "./providers/UserProvider"
 
 export default function Login() {
-    const { submitCode, error, isLoading } = useUser()
+    const { submitCode, isLoading } = useUser()
     const [email, setEmail] = useState("")
     const [step, setStep] = useState<"login" | "verify">("login")
     const [secretCode, setSecretCode] = useState("")
     const navigate = useNavigate()
+    const [error, setError] = useState("")
 
     const handleSendEmailCode = async () => {
         const { error: signInError } = await supabase.auth.signInWithOtp({
@@ -23,7 +30,7 @@ export default function Login() {
         })
 
         if (signInError) {
-            console.log(signInError.message)
+            setError(signInError.message)
             return
         }
 
@@ -42,18 +49,25 @@ export default function Login() {
                 {step === "login" ? (
                     <>
                         <CardHeader>
-                            <CardTitle className="font-bold">Login with email</CardTitle>
-                            <CardDescription>Please enter internbevis email</CardDescription>
+                            <CardTitle className="font-bold">
+                                Login with email
+                            </CardTitle>
+                            <CardDescription>
+                                Please enter internbevis email
+                            </CardDescription>
                         </CardHeader>
                         <CardContent className="flex flex-col gap-2">
                             <Input
                                 type="email"
                                 value={email}
                                 className={"h-12"}
-                                onChange={e => setEmail(e.target.value)}
+                                onChange={(e) => setEmail(e.target.value)}
                                 placeholder="name@example.com"
                             />
-                            <Button onClick={handleSendEmailCode} className={"h-12"}>
+                            <Button
+                                onClick={handleSendEmailCode}
+                                className={"h-12"}
+                            >
                                 Send code
                             </Button>
                         </CardContent>
@@ -72,7 +86,9 @@ export default function Login() {
             {step !== "verify" && (
                 <Card className="flex flex-col w-96 gap-2">
                     <CardHeader>
-                        <CardTitle className="font-bold">Login with code</CardTitle>
+                        <CardTitle className="font-bold">
+                            Login with code
+                        </CardTitle>
                         <CardDescription>Please enter secret</CardDescription>
                     </CardHeader>
                     <CardContent className="flex flex-col gap-2">
@@ -80,7 +96,7 @@ export default function Login() {
                             type="text"
                             value={secretCode}
                             className={"h-12"}
-                            onChange={e => setSecretCode(e.target.value)}
+                            onChange={(e) => setSecretCode(e.target.value)}
                             placeholder="Secret"
                         />
                         <Button onClick={handleSecretCode} className={"h-12"}>
