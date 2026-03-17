@@ -1,4 +1,3 @@
-import { Timestamp } from "firebase/firestore"
 import { categoryOptions, organizerOptions } from "@/data/studentbergen-form"
 import type { EventFormValues } from "@/types"
 import { generateUniqueSlug } from "./slugify"
@@ -7,8 +6,9 @@ import { ERR, type Event, OK, type Result } from "./types"
 import { createClient } from "@supabase/supabase-js"
 
 export const supabase = createClient(
-    "https://ydkxiragzzsaapnbnebm.supabase.co",
-    "sb_publishable_keMmOX3o5wRLw0_nj0c7Zw_jt28YDaf",
+    "https://jeezqitchepgwxjknwhz.supabase.co",
+    "sb_publishable_z2eZR6_Ao8Uc8qfmrvNj1A_0AjgALRO",
+
     //import.meta.env.VITE_PUBLIC_SUPABASE_URL || "",
     //import.meta.env.VITE_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY || "",
 )

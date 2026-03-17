@@ -2,26 +2,41 @@ import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Input } from "@/components/ui/input"
 import { Button } from "./components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./components/ui/card"
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from "./components/ui/card"
 import { useUser } from "./providers/UserProvider"
+import { supabase } from "./lib/services/events"
 
 export default function Login() {
-    const { requestAccessToken, login, submitCode, error, isLoading } = useUser()
+    const { submitCode, error, isLoading } = useUser()
     const [email, setEmail] = useState("")
-    const [token, setToken] = useState("")
-    const [step, setStep] = useState<"email" | "token">("email")
+    const [step, setStep] = useState<"login" | "verify">("login")
     const [secretCode, setSecretCode] = useState("")
     const navigate = useNavigate()
 
-    const handleSendCode = async () => {
-        const sent = await requestAccessToken(email)
-        if (sent) {
-            setStep("token")
+    const handleSendEmailCode = async () => {
+        const { error: signInError } = await supabase.auth.signInWithOtp({
+            email: email.toLowerCase(),
+            options: {
+                shouldCreateUser: false,
+                emailRedirectTo: "http://localhost:3000/callback",
+            },
+        })
+
+        if (signInError) {
+            console.log(signInError.message)
+            return
         }
+
+        setStep("verify")
     }
 
     const onSuccess = (success: boolean) => (success ? navigate("/") : {})
-    const handleLogin = async () => onSuccess(await login(email, token))
     const handleSecretCode = () => onSuccess(submitCode(secretCode))
 
     return (
@@ -30,55 +45,49 @@ export default function Login() {
             {isLoading && <p>Loading...</p>}
 
             <Card className="flex flex-col w-96 gap-2">
-                {step === "email" ? (
+                {step === "login" ? (
                     <>
                         <CardHeader>
-                            <CardTitle className="font-bold">Login with email</CardTitle>
-                            <CardDescription>Please enter internbevis email</CardDescription>
+                            <CardTitle className="font-bold">
+                                Login with email
+                            </CardTitle>
+                            <CardDescription>
+                                Please enter internbevis email
+                            </CardDescription>
                         </CardHeader>
                         <CardContent className="flex flex-col gap-2">
                             <Input
                                 type="email"
                                 value={email}
                                 className={"h-12"}
-                                onChange={e => setEmail(e.target.value)}
+                                onChange={(e) => setEmail(e.target.value)}
                                 placeholder="name@example.com"
                             />
-                            <Button onClick={handleSendCode} className={"h-12"}>
+                            <Button
+                                onClick={handleSendEmailCode}
+                                className={"h-12"}
+                            >
                                 Send code
                             </Button>
                         </CardContent>
                     </>
                 ) : (
-                    <>
-                        <CardHeader>
-                            <CardTitle className="text-xl font-bold">LOGIN</CardTitle>
-                            <CardDescription>
-                                Please enter THE CODE, recieved from email, pressing the link does
-                                not work
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="flex flex-col gap-2">
-                            <Input
-                                value={token}
-                                className={"h-12"}
-                                onChange={e => setToken(e.target.value)}
-                                placeholder="ZMICH2MR2ZX8QR6H4ISK6SO0U8UQ8MK2"
-                            />
-                            <Button onClick={handleLogin} className={"h-12"}>
-                                Log in
-                            </Button>
-                        </CardContent>
-                    </>
+                    <CardHeader>
+                        <CardDescription>
+                            VERIFICATION LINK SENT TO {email.toUpperCase()}
+                        </CardDescription>
+                    </CardHeader>
                 )}
             </Card>
 
             {/* REDUNDANT BUT AVOIDS DIV HELL */}
-            {step !== "token" && <p className="text-gray-400">or</p>}
-            {step !== "token" && (
+            {step !== "verify" && <p className="text-gray-400">or</p>}
+            {step !== "verify" && (
                 <Card className="flex flex-col w-96 gap-2">
                     <CardHeader>
-                        <CardTitle className="font-bold">Login with code</CardTitle>
+                        <CardTitle className="font-bold">
+                            Login with code
+                        </CardTitle>
                         <CardDescription>Please enter secret</CardDescription>
                     </CardHeader>
                     <CardContent className="flex flex-col gap-2">
@@ -86,7 +95,7 @@ export default function Login() {
                             type="text"
                             value={secretCode}
                             className={"h-12"}
-                            onChange={e => setSecretCode(e.target.value)}
+                            onChange={(e) => setSecretCode(e.target.value)}
                             placeholder="Secret"
                         />
                         <Button onClick={handleSecretCode} className={"h-12"}>

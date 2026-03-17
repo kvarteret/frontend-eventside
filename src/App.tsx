@@ -11,6 +11,7 @@ import Navbar from "./components/Navbar"
 import EditEvent from "./EditEvent"
 import Login from "./Login"
 import { UserProvider, useUser } from "./providers/UserProvider"
+import LoginCallback from "./LoginCallback"
 
 function ProtectedLayout() {
     const { user, isLoading, guessedCode } = useUser()
@@ -28,12 +29,12 @@ function ProtectedLayout() {
 }
 
 export const App = () => {
-    //    console.log("asdasdasd,", import.meta.env.)
     return (
         <BrowserRouter>
             <UserProvider>
                 <Routes>
                     <Route path="/login" element={<Login />} />
+                    <Route path="/callback" element={<LoginCallback />} />
 
                     <Route element={<ProtectedLayout />}>
                         <Route path="/" element={<CreateEvent />} />
