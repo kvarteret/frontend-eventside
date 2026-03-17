@@ -1,11 +1,5 @@
-import {
-    createContext,
-    type ReactNode,
-    useCallback,
-    useContext,
-    useEffect,
-    useState,
-} from "react"
+import type { User } from "@supabase/supabase-js"
+import { createContext, type ReactNode, useCallback, useContext, useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import {
     clearCode,
@@ -14,7 +8,6 @@ import {
     saveDeepLinkToken as storageSaveDeepLinkToken,
 } from "@/lib/services/auth"
 import { supabase } from "@/lib/services/events"
-import type { User } from "@supabase/supabase-js"
 
 const SECRET_CODE = "KVARTERET1111"
 

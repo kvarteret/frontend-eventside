@@ -2,10 +2,7 @@ import { deleteObject, ref } from "firebase/storage"
 
 const EVENT_IMAGE_CACHE_CONTROL = "public,max-age=604800,immutable"
 
-export async function uploadEventImage(
-    file: File | null,
-    slug: string,
-): Promise<string | null> {
+export async function uploadEventImage(file: File | null, slug: string): Promise<string | null> {
     return "" // IMPLEMENT FUNCTION AGAIN OR SOMETHING
     /*if (!file) {
         return null

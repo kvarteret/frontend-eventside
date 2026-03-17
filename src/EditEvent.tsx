@@ -16,9 +16,7 @@ interface EditEventFormProps {
 function EditEventForm({ event, initialValues }: EditEventFormProps) {
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [isDeleting, setIsDeleting] = useState(false)
-    const [existingImageUrl, setExistingImageUrl] = useState(
-        event.image?.url ?? null,
-    )
+    const [existingImageUrl, setExistingImageUrl] = useState(event.image?.url ?? null)
     const navigate = useNavigate()
 
     const form = useForm({
@@ -48,9 +46,7 @@ function EditEventForm({ event, initialValues }: EditEventFormProps) {
                 )
             } catch (error) {
                 const message =
-                    error instanceof Error
-                        ? error.message
-                        : "Ukjent feil ved oppdatering"
+                    error instanceof Error ? error.message : "Ukjent feil ved oppdatering"
 
                 toast.error("Kunne ikke oppdatere arrangement", {
                     description: message,
@@ -71,10 +67,7 @@ function EditEventForm({ event, initialValues }: EditEventFormProps) {
 
         setIsDeleting(true)
 
-        const { error } = await supabase
-            .from("events")
-            .delete()
-            .eq("id", event.id)
+        const { error } = await supabase.from("events").delete().eq("id", event.id)
 
         setIsDeleting(false)
 
@@ -107,9 +100,7 @@ export default function EditEvent() {
     const [isLoading, setIsLoading] = useState(true)
     const [loadError, setLoadError] = useState<string | null>(null)
     const [event, setEvent] = useState<Event | null>(null)
-    const [initialValues, setInitialValues] = useState<EventFormValues | null>(
-        null,
-    )
+    const [initialValues, setInitialValues] = useState<EventFormValues | null>(null)
 
     useEffect(() => {
         let cancelled = false
@@ -122,11 +113,7 @@ export default function EditEvent() {
             }
 
             setIsLoading(true)
-            const { data, error } = await supabase
-                .from("events")
-                .select("*")
-                .eq("id", id)
-                .single()
+            const { data, error } = await supabase.from("events").select("*").eq("id", id).single()
 
             if (cancelled) {
                 return
@@ -166,11 +153,5 @@ export default function EditEvent() {
         )
     }
 
-    return (
-        <EditEventForm
-            key={event.id}
-            event={event}
-            initialValues={initialValues}
-        />
-    )
+    return <EditEventForm key={event.id} event={event} initialValues={initialValues} />
 }

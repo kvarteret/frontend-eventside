@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react"
 import ErrorOccured from "./components/ErrorOccured"
 import { EventCategory } from "./components/EventCategory"
+import { supabase } from "./lib/services/events"
 import { type Event, type Status } from "./lib/services/types"
 import { categorizeEvents } from "./lib/utils"
-import { supabase } from "./lib/services/events"
 
 export const AllEvents = () => {
     const [loading, setLoading] = useState<boolean>(false)
@@ -24,9 +24,7 @@ export const AllEvents = () => {
             try {
                 setLoading(true)
 
-                const { data, error } = await supabase
-                    .from("events")
-                    .select("*")
+                const { data, error } = await supabase.from("events").select("*")
 
                 if (error) {
                     setError(error.message)
@@ -59,13 +57,13 @@ export const AllEvents = () => {
 
     return (
         <div className="w-full h-full p-8 space-y-8">
-            {categorizedEvents.map((ce) => (
+            {categorizedEvents.map(ce => (
                 <EventCategory
                     key={ce.status}
                     statusEvents={ce}
                     isOpen={open.get(ce.status)!}
                     toggleOpen={() =>
-                        setOpen((prev) => {
+                        setOpen(prev => {
                             const next = new Map(prev)
                             const isOpen = next.get(ce.status) ?? false
                             next.set(ce.status, !isOpen)

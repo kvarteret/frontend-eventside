@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
-import { supabase } from "./lib/services/events"
 import { useNavigate, useSearchParams } from "react-router-dom"
+import { supabase } from "./lib/services/events"
 
 export default function LoginCallback() {
     const [error, setError] = useState("")
@@ -34,11 +34,7 @@ export default function LoginCallback() {
 
     return (
         <div>
-            {error ? (
-                <p className="text-red-400">{error}</p>
-            ) : (
-                <p>Verifying your login...</p>
-            )}
+            {error ? <p className="text-red-400">{error}</p> : <p>Verifying your login...</p>}
         </div>
     )
 }

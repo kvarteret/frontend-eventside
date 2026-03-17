@@ -24,9 +24,7 @@ export const createDefaultEventFormValues = (): EventFormValues => ({
     en: createDefaultLanguageContent(),
 })
 
-const mapTranslationToLanguageContent = (
-    translation: Translation | null,
-): LanguageContent => {
+const mapTranslationToLanguageContent = (translation: Translation | null): LanguageContent => {
     if (!translation) {
         return {
             ...createDefaultLanguageContent(),
@@ -47,7 +45,7 @@ export const eventToFormValues = (event: Event): EventFormValues => {
     const organizerId = event.organizer?.id
 
     return {
-        categories: event.categories.map((category) => category.id),
+        categories: event.categories.map(category => category.id),
         organizers: typeof organizerId === "number" ? [organizerId] : [],
         startTime: new Date(event.event_start),
         endTime: new Date(event.event_end),

@@ -3,8 +3,8 @@ import { format, parse } from "date-fns"
 import { twMerge } from "tailwind-merge"
 import {
     ERR,
-    OK,
     type Event,
+    OK,
     type Result,
     type Status,
     type StatusEvents,
@@ -112,9 +112,7 @@ export const projectDescriptionPreview = (
     return `${normalized.slice(0, maxChars).trimEnd()}...`
 }
 
-export function getTranslation(
-    translations: Translations,
-): Result<Translation> {
+export function getTranslation(translations: Translations): Result<Translation> {
     const { en, no } = translations
     if (no !== null) return OK(no)
     if (en !== null) return OK(en)

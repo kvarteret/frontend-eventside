@@ -1,9 +1,9 @@
+import { createClient } from "@supabase/supabase-js"
 import { categoryOptions, organizerOptions } from "@/data/studentbergen-form"
 import type { EventFormValues } from "@/types"
 import { generateUniqueSlug } from "./slugify"
 import { uploadEventImage } from "./storage"
 import { ERR, type Event, OK, type Result } from "./types"
-import { createClient } from "@supabase/supabase-js"
 
 export const supabase = createClient(
     "https://jeezqitchepgwxjknwhz.supabase.co",
@@ -34,25 +34,20 @@ const getErrorMessage = (error: unknown): string => {
     )
 }*/
 
-const canDeleteImageFromStorage = (
-    imageUrl: string,
-    eventIdToIgnore: string,
-) => {
+const canDeleteImageFromStorage = (imageUrl: string, eventIdToIgnore: string) => {
     // IMPLEMENT WHEN HAVING DECIDED ON IMAGE STORAGE
 }
 
 function getCategoryById(id: number): { id: number; name: string } | null {
-    const category = categoryOptions.find((c) => c.id === id)
+    const category = categoryOptions.find(c => c.id === id)
     return category ? { id: category.id, name: category.name } : null
 }
 
 /**
  * Look up an organizer by ID
  */
-function getOrganizerById(
-    id: number,
-): { id: number | null; name: string } | null {
-    const organizer = organizerOptions.find((o) => o.id === id)
+function getOrganizerById(id: number): { id: number | null; name: string } | null {
+    const organizer = organizerOptions.find(o => o.id === id)
     return organizer ? { id: organizer.id, name: organizer.name } : null
 }
 
@@ -77,12 +72,12 @@ async function formToEvent(
 
     // Build categories array from selected IDs
     const categories = formValues.categories
-        .map((id) => getCategoryById(id))
+        .map(id => getCategoryById(id))
         .filter((c): c is { id: number; name: string } => c !== null)
 
     // Build organizers array from selected IDs (first one is primary)
     const organizers = formValues.organizers
-        .map((id) => getOrganizerById(id))
+        .map(id => getOrganizerById(id))
         .filter((o): o is { id: number | null; name: string } => o !== null)
     const organizer = organizers[0] ?? null
 
@@ -139,20 +134,12 @@ async function formToEvent(
 /**
  * Create a new event in Firestore
  */
-export async function createEvent(
-    formValues: EventFormValues,
-): Promise<Result<Event>> {
+export async function createEvent(formValues: EventFormValues): Promise<Result<Event>> {
     const nameForSlug = formValues.no.name || formValues.en.name
     const slug = await generateUniqueSlug(nameForSlug)
-    const imageUrl = formValues.image
-        ? await uploadEventImage(formValues.image, slug)
-        : null
+    const imageUrl = formValues.image ? await uploadEventImage(formValues.image, slug) : null
     const eventData = await formToEvent(formValues, { slug, imageUrl })
-    const { data, error } = await supabase
-        .from("events")
-        .insert(eventData)
-        .select()
-        .single()
+    const { data, error } = await supabase.from("events").insert(eventData).select().single()
 
     if (error) {
         return ERR(error.message)
@@ -168,10 +155,7 @@ function deleteImageFromStorageIfUnused(a: any, b: any) {
     // IMPLEMENT IF STILL NEEDED IDK
 }
 
-export async function updateEvent(
-    id: string,
-    formValues: EventFormValues,
-): Promise<Result<Event>> {
+export async function updateEvent(id: string, formValues: EventFormValues): Promise<Result<Event>> {
     try {
         const { data: existingEvent, error: fetchError } = await supabase
             .from("events")
@@ -187,10 +171,7 @@ export async function updateEvent(
         let nextImageUrl = existingImageUrl
 
         if (formValues.image) {
-            nextImageUrl = await uploadEventImage(
-                formValues.image,
-                existingEvent.slug,
-            )
+            nextImageUrl = await uploadEventImage(formValues.image, existingEvent.slug)
 
             if (existingImageUrl && existingImageUrl !== nextImageUrl) {
                 await deleteImageFromStorageIfUnused(existingImageUrl, id)
