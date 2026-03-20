@@ -35,7 +35,6 @@ with inferred as (
     select
         e.id,
         case
-            when e.is_internal then 'internarrangement'
             when coalesce(e.translations->'no'->>'title', e.translations->'en'->>'title', e.slug) ilike '%programslipp%' then 'programslipp'
             when coalesce(e.translations->'no'->>'title', e.translations->'en'->>'title', e.slug) ilike '%generalforsamling%' then 'generalforsamling'
             when coalesce(e.translations->'no'->>'title', e.translations->'en'->>'title', e.slug) ilike '%panelsamtale%' then 'panelsamtale'
