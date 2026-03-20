@@ -1,13 +1,16 @@
-import type { User } from "@supabase/supabase-js"
 import { createContext, type ReactNode, useCallback, useContext, useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import {
-    clearCode,
+    requestAccessToken as apiRequestAccessToken,
+    clearCredentials,
     getDeepLinkToken,
+    getInternkortInformation,
+    getSavedCredentials,
+    saveCredentials,
     clearDeepLinkToken as storageClearDeepLinkToken,
     saveDeepLinkToken as storageSaveDeepLinkToken,
 } from "@/lib/services/auth"
-import { supabase } from "@/lib/services/events"
+import type { User } from "@/lib/services/types"
 
 const SECRET_CODE = "KVARTERET1111"
 
@@ -17,6 +20,8 @@ interface UserContextValue {
     error: string | null
     guessedCode: boolean
     submitCode: (code: string) => boolean
+    requestAccessToken: (email: string) => Promise<boolean>
+    login: (email: string, accessToken: string) => Promise<boolean>
     logout: () => void
     saveDeepLinkToken: (token: string) => void
     consumeDeepLinkToken: () => string | null
@@ -33,28 +38,33 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
     useEffect(() => {
         const restore = async () => {
-            try {
-                const storedCode = localStorage.getItem("guessedCode")
-                if (storedCode === "true") {
-                    setGuessedCode(true)
-                }
-
-                const {
-                    data: { user },
-                    error,
-                } = await supabase.auth.getUser()
-
-                if (error) {
-                    setError(error.message)
-                    return
-                }
-
-                setUser(user)
-            } finally {
-                setIsLoading(false)
+            const storedCode = localStorage.getItem("guessedCode")
+            if (storedCode === "true") {
+                setGuessedCode(true)
             }
+
+            const { email, accessToken } = getSavedCredentials()
+            if (email && accessToken) {
+                const result = await getInternkortInformation(email, accessToken)
+                if (result.ok) {
+                    setUser(result.data)
+                } else {
+                    clearCredentials()
+                }
+            }
+            setIsLoading(false)
         }
         restore()
+    }, [])
+
+    const requestAccessToken = useCallback(async (email: string) => {
+        setError(null)
+        const result = await apiRequestAccessToken(email)
+        if (result.ok) {
+            return true
+        }
+        setError(result.error)
+        return false
     }, [])
 
     const submitCode = useCallback((code: string) => {
@@ -66,10 +76,24 @@ export function UserProvider({ children }: { children: ReactNode }) {
         return false
     }, [])
 
+    const login = useCallback(async (email: string, accessToken: string) => {
+        setError(null)
+        setIsLoading(true)
+        const result = await getInternkortInformation(email, accessToken)
+        if (result.ok) {
+            saveCredentials(email, accessToken)
+            setUser(result.data)
+            setIsLoading(false)
+            return true
+        }
+        setError(result.error)
+        setIsLoading(false)
+        return false
+    }, [])
+
     const logout = useCallback(() => {
-        clearCode()
+        clearCredentials()
         storageClearDeepLinkToken()
-        supabase.auth.signOut()
         setUser(null)
         setError(null)
         navigate("/login")
@@ -93,6 +117,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
                 error,
                 guessedCode,
                 submitCode,
+                requestAccessToken,
+                login,
                 logout,
                 saveDeepLinkToken: saveDeepLink,
                 consumeDeepLinkToken: consumeDeepLink,

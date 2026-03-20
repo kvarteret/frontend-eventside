@@ -5,6 +5,7 @@ import {
     ERR,
     type Event,
     OK,
+    type OrganizerGroup,
     type Result,
     type Status,
     type StatusEvents,
@@ -137,4 +138,19 @@ export function weekday(isostring: string): string {
     const date = new Date(isostring)
     const days = ["Søn", "Man", "Tir", "Ons", "Tor", "Fre", "Lør"]
     return days[date.getDay()] + " "
+}
+
+export function buildOrganizerGroupText(groups: OrganizerGroup[]): string {
+    return groups.map(group => group.name).join(", ")
+}
+
+export function buildEventTaxonomyText(event: Event): string {
+    const eventTypeName = event.event_type?.name ?? "Ukjent type"
+    const organizerGroups = buildOrganizerGroupText(event.organizer_groups)
+
+    if (!organizerGroups) {
+        return eventTypeName
+    }
+
+    return `${eventTypeName} (${organizerGroups})`
 }

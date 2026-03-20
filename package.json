@@ -7,6 +7,8 @@
         "dev": "bun --hot src/index.ts",
         "start": "NODE_ENV=production bun src/index.ts",
         "build": "bun run build.ts",
+        "backfill:event-taxonomy": "bun run scripts/backfill-event-taxonomy.ts",
+        "migrate:event-images": "bun run scripts/port-event-images.ts",
         "lint": "bunx @biomejs/biome check .",
         "lint:ci": "bunx @biomejs/biome ci .",
         "format": "bunx @biomejs/biome format --write ."

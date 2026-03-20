@@ -26,10 +26,10 @@ const languageLabels = {
         intro: "Short summary",
         article: "Description",
         placeholders: {
-            name: "Breakfast meeting about the fusjonering",
-            imageCaption: "Students eating breakfast at Teglverket",
-            intro: "We are hosting a breakfast meeting about the fusion between Studentersamfunnet i Bergen and Kvarteret.",
-            article: "Penguin and hedgehog will be served.\n\nWe look forward to seeing you!",
+            name: "Breakfast meeting about the merger",
+            imageCaption: "Students having breakfast at Teglverket",
+            intro: "We are hosting a breakfast meeting about the merger between Studentersamfunnet i Bergen and Kvarteret.",
+            article: "Breakfast will be served.\n\nWe look forward to seeing you!",
         },
     },
 }

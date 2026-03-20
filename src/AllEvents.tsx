@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react"
 import ErrorOccured from "./components/ErrorOccured"
 import { EventCategory } from "./components/EventCategory"
-import { supabase } from "./lib/services/events"
+import { fetchEvents } from "./lib/services/events"
 import { type Event, type Status } from "./lib/services/types"
 import { categorizeEvents } from "./lib/utils"
 
@@ -20,30 +20,29 @@ export const AllEvents = () => {
     )
 
     useEffect(() => {
-        async function fetchEvents() {
+        async function loadEvents() {
             try {
                 setLoading(true)
+                const result = await fetchEvents()
 
-                const { data, error } = await supabase.from("events").select("*")
-
-                if (error) {
-                    setError(error.message)
+                if (!result.ok) {
+                    setError(result.error)
                     return
                 }
 
-                setEvents(data)
+                setEvents(result.data)
             } finally {
                 setLoading(false)
             }
         }
 
-        fetchEvents()
+        void loadEvents()
     }, [])
 
     const categorizedEvents = useMemo(() => categorizeEvents(events), [events])
 
     if (loading) {
-        return <div className="p-8">Loading...</div>
+        return <div className="p-8">Laster...</div>
     }
 
     if (error) {
@@ -52,7 +51,7 @@ export const AllEvents = () => {
     }
 
     if (events.length === 0) {
-        return <div className="p-8">Found no events.</div>
+        return <div className="p-8">Fant ingen arrangementer.</div>
     }
 
     return (

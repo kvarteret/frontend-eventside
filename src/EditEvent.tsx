@@ -4,7 +4,8 @@ import { Link, useNavigate, useParams } from "react-router-dom"
 import { toast } from "sonner"
 import { EventFormLayout } from "@/components/form/EventFormLayout"
 import { eventToFormValues } from "@/lib/event-form"
-import { supabase, updateEvent } from "@/lib/services/events"
+import { fetchEventById, supabase, updateEvent } from "@/lib/services/events"
+import { deleteEventImageByUrl } from "@/lib/services/storage"
 import type { Event } from "@/lib/services/types"
 import type { EventFormValues } from "@/types"
 
@@ -78,6 +79,14 @@ function EditEventForm({ event, initialValues }: EditEventFormProps) {
             return
         }
 
+        if (event.image?.url) {
+            try {
+                await deleteEventImageByUrl(event.image.url)
+            } catch (cleanupError) {
+                console.warn("Failed to delete image for removed event.", cleanupError)
+            }
+        }
+
         toast.success("Arrangementet ble slettet.")
         navigate("/events")
     }
@@ -113,20 +122,20 @@ export default function EditEvent() {
             }
 
             setIsLoading(true)
-            const { data, error } = await supabase.from("events").select("*").eq("id", id).single()
+            const result = await fetchEventById(id)
 
             if (cancelled) {
                 return
             }
 
-            if (error) {
-                setLoadError(error.message)
+            if (!result.ok) {
+                setLoadError(result.error)
                 setIsLoading(false)
                 return
             }
 
-            setEvent(data)
-            setInitialValues(eventToFormValues(data))
+            setEvent(result.data)
+            setInitialValues(eventToFormValues(result.data))
             setLoadError(null)
             setIsLoading(false)
         }

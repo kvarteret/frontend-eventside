@@ -1,5 +1,5 @@
 import slugify from "slugify"
-import { supabase } from "./events"
+import { supabase } from "./supabase"
 
 /**
  * Generate a URL-safe slug from a name.

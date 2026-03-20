@@ -53,32 +53,46 @@ export type Translations = {
     en: Translation | null
 }
 
-export type Event = {
-    id: string // Firestore doc ID
-    slug: string // Auto-generated from name
-    status: "published" | "draft" | "archived"
+export type EventType = {
+    id: string
+    slug: string
+    name: string
+    description: string | null
+    sort_order: number
+    is_active: boolean
+}
 
-    // Timestamps: isoStrings
+export type OrganizerGroup = {
+    id: string
+    slug: string
+    name: string
+    sort_order: number
+    is_active: boolean
+    default_event_type_id: string | null
+}
+
+export type EventTaxonomy = {
+    eventTypes: EventType[]
+    organizerGroups: OrganizerGroup[]
+}
+
+export type Event = {
+    id: string
+    slug: string
+    status: "published" | "draft" | "archived"
     event_start: string
     event_end: string
     created_at: string
     updated_at: string
-
-    // Links
     ticket_url: string | null
     facebook_url: string | null
-
-    // Image (URL-based for MVP)
-    image: { url: string; __typename: "firestore" } | null
-
-    // Organization
-    organizer: { id: number | null; name: string } | null
-    categories: { id: number; name: string }[]
+    image: { url: string; __typename: "supabase" } | null
+    event_type_id: string
+    event_type: EventType | null
+    organizer_groups: OrganizerGroup[]
+    is_internal: boolean
+    is_featured: boolean
+    recurring_interval_days: number | null
     price: string | null
-
-    // Bilingual translations
     translations: Translations
 }
-
-// Type for creating a new event (without id which is assigned by Firestore)
-//export type CreateFirestoreEvent = Omit<Event, "id">

@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom"
 import type { Event } from "@/lib/services/types"
 import {
+    buildEventTaxonomyText,
     eventDateCard,
     getTranslation,
     projectDescriptionPreview,
@@ -22,8 +23,19 @@ export function EventCard({ event }: { event: Event }) {
     return (
         <Link to={`/events/${event.id}/edit`}>
             <Card className="p-4 rounded cursor-pointer flex flex-col gap-4 hover:border-primary/40 transition-colors">
+                <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    {buildEventTaxonomyText(event)}
+                </span>
                 <h1 className="text-xl">{translation.title}</h1>
                 {!!descriptionPreview && <p className="text-xs">{descriptionPreview}</p>}
+                {event.recurring_interval_days ? (
+                    <span className="text-xs font-medium text-muted-foreground">
+                        hver {event.recurring_interval_days}. dag
+                    </span>
+                ) : null}
+                {event.is_internal ? (
+                    <span className="text-xs font-medium text-amber-700">Kun internt</span>
+                ) : null}
                 <div className="flex justify-between">
                     <span className="justify-left">{timeRemaining(startDate)}</span>
                     <div className="justify-right">
