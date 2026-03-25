@@ -1,6 +1,7 @@
 import { type ClassValue, clsx } from "clsx"
 import { format } from "date-fns"
 import { twMerge } from "tailwind-merge"
+import { parseEventDateTime } from "@/lib/date-time"
 import {
     ERR,
     type Event,
@@ -28,8 +29,8 @@ export function getEventStatus(event: Event): Status {
     const now = new Date()
 
     const { event_start, event_end } = event
-    const start = new Date(event_start)
-    const end = new Date(event_end)
+    const start = parseEventDateTime(event_start)
+    const end = parseEventDateTime(event_end)
     const nextWeek = (start.getTime() - now.getTime()) / 1000 < 604800
 
     if (now < start && nextWeek) return "nextWeek"
@@ -121,11 +122,11 @@ export function getTranslation(translations: Translations): Result<Translation> 
 }
 
 export function eventDateCard(date: string): string {
-    return format(new Date(date), "dd.MM.yyyy")
+    return format(parseEventDateTime(date), "dd.MM.yyyy")
 }
 
 export function timeRemaining(isostring: string): string {
-    const date = new Date(isostring)
+    const date = parseEventDateTime(isostring)
     const diff = (date.getTime() - Date.now()) / 1000
     const hours = diff / 3600
     const days = hours / 24
@@ -135,7 +136,7 @@ export function timeRemaining(isostring: string): string {
 }
 
 export function weekday(isostring: string): string {
-    const date = new Date(isostring)
+    const date = parseEventDateTime(isostring)
     const days = ["Søn", "Man", "Tir", "Ons", "Tor", "Fre", "Lør"]
     return days[date.getDay()] + " "
 }

@@ -29,8 +29,13 @@ export function DateTimePicker({
     const [open, setOpen] = React.useState(false)
     const [time, setTime] = React.useState(value ? format(value, "HH:mm") : "12:00")
 
+    React.useEffect(() => {
+        setTime(value ? format(value, "HH:mm") : "12:00")
+    }, [value])
+
     const handleDateSelect = (date: Date | undefined) => {
         if (!date) {
+            setTime("12:00")
             onChange(undefined)
             return
         }

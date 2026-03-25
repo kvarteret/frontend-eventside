@@ -1,3 +1,4 @@
+import { parseEventDateTime } from "@/lib/date-time"
 import type { Event, Translation } from "@/lib/services/types"
 import { projectDescriptionPreview } from "@/lib/utils"
 import type { EventFormValues, LanguageContent } from "@/types"
@@ -51,8 +52,8 @@ export const eventToFormValues = (event: Event): EventFormValues => {
         isInternal: event.is_internal,
         isFeatured: event.is_featured,
         recurringIntervalDays: event.recurring_interval_days?.toString() ?? "",
-        startTime: new Date(event.event_start),
-        endTime: new Date(event.event_end),
+        startTime: parseEventDateTime(event.event_start),
+        endTime: parseEventDateTime(event.event_end),
         facebookUrl: event.facebook_url ?? "",
         price: event.price ?? "",
         ticketsUrl: event.ticket_url ?? "",

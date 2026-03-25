@@ -1,3 +1,4 @@
+import { formatEventDateTimeForApi } from "@/lib/date-time"
 import type { EventFormValues } from "@/types"
 import { generateUniqueSlug } from "./slugify"
 import { deleteEventImageByUrl, uploadEventImage } from "./storage"
@@ -144,8 +145,8 @@ async function formToEventRecord(
     return {
         slug,
         status: options?.status ?? "published",
-        event_start: formValues.startTime.toISOString(),
-        event_end: formValues.endTime.toISOString(),
+        event_start: formatEventDateTimeForApi(formValues.startTime),
+        event_end: formatEventDateTimeForApi(formValues.endTime),
         created_at: options?.createdAt ?? now,
         updated_at: options?.updatedAt ?? now,
         ticket_url: formValues.ticketsUrl || null,
