@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react"
-import { MultiSelectCombobox } from "@/components/ui/category-combobox"
+import { MultiSelectCombobox } from "@/components/ui/multi-select-combobox"
 import {
     Select,
     SelectContent,

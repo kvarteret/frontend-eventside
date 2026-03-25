@@ -1,5 +1,9 @@
 # event.kvarteret.no
 
+Database schema ownership has moved to Alembic in
+`../kvarteret-personal`. This repository consumes the live Supabase event
+schema but does not own or carry production schema migrations.
+
 [StudentBergen.no API DOCS](https://documenter.getpostman.com/view/5111196/RztrKSav)
 
 ## Utfordringer
