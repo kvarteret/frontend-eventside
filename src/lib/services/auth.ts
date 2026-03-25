@@ -94,6 +94,10 @@ export function clearCredentials(): void {
     localStorage.removeItem(STORAGE_KEYS.user)
 }
 
+export function clearCode(): void {
+    localStorage.removeItem("guessedCode")
+}
+
 export function saveDeepLinkToken(token: string): void {
     localStorage.setItem(STORAGE_KEYS.deepLinkToken, token)
 }

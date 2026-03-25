@@ -9,8 +9,11 @@ export interface LanguageContent {
 }
 
 export interface EventFormValues {
-    categories: number[]
-    organizers: number[]
+    eventTypeId: string
+    organizerGroupIds: string[]
+    isInternal: boolean
+    isFeatured: boolean
+    recurringIntervalDays: string
     startTime: Date | undefined
     endTime: Date | undefined
     facebookUrl: string

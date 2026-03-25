@@ -13,14 +13,14 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils"
 
 export interface ComboboxOption {
-    id: number
+    id: string
     name: string
 }
 
 interface MultiSelectComboboxProps {
     options: readonly ComboboxOption[]
-    value: number[]
-    onChange: (value: number[]) => void
+    value: string[]
+    onChange: (value: string[]) => void
     placeholder?: string
     searchPlaceholder?: string
     emptyText?: string
@@ -30,15 +30,15 @@ export function MultiSelectCombobox({
     options,
     value,
     onChange,
-    placeholder = "Select options...",
-    searchPlaceholder = "Search...",
-    emptyText = "No options found.",
+    placeholder = "Velg alternativer...",
+    searchPlaceholder = "Søk...",
+    emptyText = "Fant ingen alternativer.",
 }: MultiSelectComboboxProps) {
     const [open, setOpen] = React.useState(false)
 
     const selectedOptions = options.filter(opt => value.includes(opt.id))
 
-    const handleSelect = (optionId: number) => {
+    const handleSelect = (optionId: string) => {
         if (value.includes(optionId)) {
             onChange(value.filter(id => id !== optionId))
         } else {
@@ -46,7 +46,7 @@ export function MultiSelectCombobox({
         }
     }
 
-    const handleRemove = (optionId: number, e: React.MouseEvent) => {
+    const handleRemove = (optionId: string, e: React.MouseEvent) => {
         e.stopPropagation()
         onChange(value.filter(id => id !== optionId))
     }

@@ -4,6 +4,7 @@ import CreateEvent from "./CreateEvent"
 import Navbar from "./components/Navbar"
 import EditEvent from "./EditEvent"
 import Login from "./Login"
+import LoginCallback from "./LoginCallback"
 import { UserProvider, useUser } from "./providers/UserProvider"
 
 function ProtectedLayout() {
@@ -27,6 +28,7 @@ export const App = () => {
             <UserProvider>
                 <Routes>
                     <Route path="/login" element={<Login />} />
+                    <Route path="/callback" element={<LoginCallback />} />
 
                     <Route element={<ProtectedLayout />}>
                         <Route path="/" element={<CreateEvent />} />

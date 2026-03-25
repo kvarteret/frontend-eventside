@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState } from "react"
 import ErrorOccured from "./components/ErrorOccured"
 import { EventCategory } from "./components/EventCategory"
-import { getEvents } from "./lib/services/events"
-import { type FirestoreEvent, type Status } from "./lib/services/types"
+import { fetchEvents } from "./lib/services/events"
+import { type Event, type Status } from "./lib/services/types"
 import { categorizeEvents } from "./lib/utils"
 
 export const AllEvents = () => {
     const [loading, setLoading] = useState<boolean>(false)
-    const [events, setEvents] = useState<FirestoreEvent[]>([])
+    const [events, setEvents] = useState<Event[]>([])
     const [error, setError] = useState<string | null>(null)
     const [open, setOpen] = useState<Map<Status, boolean>>(
         () =>
@@ -20,26 +20,29 @@ export const AllEvents = () => {
     )
 
     useEffect(() => {
-        async function fetchEvents() {
-            setLoading(true)
-            const eventsResult = await getEvents()
-            setLoading(false)
+        async function loadEvents() {
+            try {
+                setLoading(true)
+                const result = await fetchEvents()
 
-            if (!eventsResult.ok) {
-                setError(eventsResult.error)
-                return
+                if (!result.ok) {
+                    setError(result.error)
+                    return
+                }
+
+                setEvents(result.data)
+            } finally {
+                setLoading(false)
             }
-
-            setEvents(eventsResult.data)
         }
 
-        fetchEvents()
+        void loadEvents()
     }, [])
 
     const categorizedEvents = useMemo(() => categorizeEvents(events), [events])
 
     if (loading) {
-        return <div className="p-8">Loading...</div>
+        return <div className="p-8">Laster...</div>
     }
 
     if (error) {
@@ -48,7 +51,7 @@ export const AllEvents = () => {
     }
 
     if (events.length === 0) {
-        return <div className="p-8">Found no events.</div>
+        return <div className="p-8">Fant ingen arrangementer.</div>
     }
 
     return (

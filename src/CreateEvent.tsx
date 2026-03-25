@@ -13,7 +13,15 @@ export const CreateEvent = () => {
         onSubmit: async ({ value }) => {
             setIsSubmitting(true)
             try {
-                const event = await createEvent(value)
+                const result = await createEvent(value)
+                if (!result.ok) {
+                    toast.error("Feil ved publisering", {
+                        description: result.error,
+                    })
+                    return
+                }
+
+                const event = result.data
                 toast.success(
                     <a
                         href={`https://kvarteret.no/events/${event.slug}`}

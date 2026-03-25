@@ -22,7 +22,9 @@ export default function Navbar() {
         <header className="border-b bg-background">
             <nav className="flex justify-between items-center px-10">
                 <div className=" h-16 flex items-center gap-16">
-                    <div className="text-lg font-semibold tracking-tight">Kvarteret Events</div>
+                    <div className="text-lg font-semibold tracking-tight">
+                        Kvarteret arrangementer
+                    </div>
 
                     <div className="flex items-center gap-1">
                         {navItems.map(item => {
@@ -59,7 +61,7 @@ export default function Navbar() {
                     }
                     onClick={logout}
                 >
-                    LOGOUT
+                    Logg ut
                 </Button>
             </nav>
         </header>

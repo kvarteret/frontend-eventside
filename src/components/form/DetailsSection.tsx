@@ -16,6 +16,7 @@ const detailsFields: TextFieldConfig[] = [
     { name: "facebookUrl", label: "Lenke til event på Facebook", type: "url" },
     { name: "price", label: "Pris" },
     { name: "ticketsUrl", label: "Lenke til nettside eller billettkjøp", type: "url" },
+    { name: "recurringIntervalDays", label: "Gjentas hver X. dag", type: "number" },
     { name: "image", label: "Bilde", type: "file" },
 ]
 
@@ -61,6 +62,33 @@ const TextField = ({ form, config, existingImageUrl }: TextFieldProps) => (
                         field.handleChange(e.target.value)
                     }}
                 />
+            </FieldWrapper>
+        )}
+    </form.Field>
+)
+
+const BooleanField = ({
+    form,
+    name,
+    label,
+    hint,
+}: {
+    form: EventForm
+    name: "isInternal" | "isFeatured"
+    label: string
+    hint?: string
+}) => (
+    <form.Field name={name}>
+        {(field: any) => (
+            <FieldWrapper label={label} hint={hint}>
+                <label className="inline-flex items-center gap-2">
+                    <input
+                        type="checkbox"
+                        checked={field.state.value}
+                        onChange={e => field.handleChange(e.target.checked)}
+                    />
+                    <span>{label}</span>
+                </label>
             </FieldWrapper>
         )}
     </form.Field>
@@ -165,6 +193,20 @@ export const DetailsSection = ({ form, existingImageUrl }: DetailsSectionProps) 
                     existingImageUrl={existingImageUrl}
                 />
             ))}
+            <div className="grid gap-4 md:grid-cols-2">
+                <BooleanField
+                    form={form}
+                    name="isFeatured"
+                    label="Fremhevet arrangement"
+                    hint="Hvis flere arrangementer er fremhevet, skal klientene bruke det nærmeste kommende arrangementet."
+                />
+                <BooleanField
+                    form={form}
+                    name="isInternal"
+                    label="Kun internt"
+                    hint="Interne arrangementer skjules på den offentlige nettsiden."
+                />
+            </div>
             <RemoveImageField form={form} existingImageUrl={existingImageUrl} />
         </section>
     )

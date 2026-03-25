@@ -36,7 +36,7 @@ export default function Login() {
                     <div className="flex w-full max-w-md flex-col gap-8">
                         {error ? <p className="text-destructive text-sm">{error}</p> : null}
                         {isLoading ? (
-                            <p className="text-muted-foreground text-sm">Loading...</p>
+                            <p className="text-muted-foreground text-sm">Laster...</p>
                         ) : null}
 
                         <Card className="flex flex-col gap-2">
@@ -44,10 +44,10 @@ export default function Login() {
                                 <>
                                     <CardHeader>
                                         <CardTitle className="font-bold">
-                                            Login with email
+                                            Logg inn med e-post
                                         </CardTitle>
                                         <CardDescription>
-                                            Please enter internbevis email
+                                            Skriv inn e-postadressen til internbeviset
                                         </CardDescription>
                                     </CardHeader>
                                     <CardContent className="flex flex-col gap-2">
@@ -59,16 +59,19 @@ export default function Login() {
                                             placeholder="name@example.com"
                                         />
                                         <Button onClick={handleSendCode} className="h-12">
-                                            Send code
+                                            Send kode
                                         </Button>
                                     </CardContent>
                                 </>
                             ) : (
                                 <>
                                     <CardHeader>
-                                        <CardTitle className="text-xl font-bold">LOGIN</CardTitle>
+                                        <CardTitle className="text-xl font-bold">
+                                            LOGG INN
+                                        </CardTitle>
                                         <CardDescription>
-                                            Please enter the 6 digit code sent to your email.
+                                            Skriv inn koden du fikk på e-post. Det fungerer ikke å
+                                            trykke på lenken.
                                         </CardDescription>
                                     </CardHeader>
                                     <CardContent className="flex flex-col gap-2">
@@ -76,10 +79,10 @@ export default function Login() {
                                             value={token}
                                             className="h-12"
                                             onChange={e => setToken(e.target.value)}
-                                            placeholder="123456"
+                                            placeholder="ZMICH2MR2ZX8QR6H4ISK6SO0U8UQ8MK2"
                                         />
                                         <Button onClick={handleLogin} className="h-12">
-                                            Log in
+                                            Logg inn
                                         </Button>
                                     </CardContent>
                                 </>
@@ -87,13 +90,13 @@ export default function Login() {
                         </Card>
 
                         {step !== "token" ? (
-                            <p className="text-muted-foreground text-center text-sm">or</p>
+                            <p className="text-muted-foreground text-center text-sm">eller</p>
                         ) : null}
                         {step !== "token" ? (
                             <Card className="flex flex-col gap-2">
                                 <CardHeader>
-                                    <CardTitle className="font-bold">Login with code</CardTitle>
-                                    <CardDescription>Please enter secret</CardDescription>
+                                    <CardTitle className="font-bold">Logg inn med kode</CardTitle>
+                                    <CardDescription>Skriv inn hemmelig kode</CardDescription>
                                 </CardHeader>
                                 <CardContent className="flex flex-col gap-2">
                                     <Input
@@ -101,10 +104,10 @@ export default function Login() {
                                         value={secretCode}
                                         className="h-12"
                                         onChange={e => setSecretCode(e.target.value)}
-                                        placeholder="Secret"
+                                        placeholder="Hemmelig kode"
                                     />
                                     <Button onClick={handleSecretCode} className="h-12">
-                                        Submit code
+                                        Send inn kode
                                     </Button>
                                 </CardContent>
                             </Card>

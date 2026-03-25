@@ -1,152 +1,161 @@
-import {
-    addDoc,
-    collection,
-    deleteDoc,
-    doc,
-    getDoc,
-    getDocs,
-    limit,
-    orderBy,
-    query,
-    Timestamp,
-    updateDoc,
-    where,
-} from "firebase/firestore"
-import { categoryOptions, organizerOptions } from "@/data/studentbergen-form"
-import { db } from "@/lib/firebase"
 import type { EventFormValues } from "@/types"
 import { generateUniqueSlug } from "./slugify"
 import { deleteEventImageByUrl, uploadEventImage } from "./storage"
-import { type CreateFirestoreEvent, ERR, type FirestoreEvent, OK, type Result } from "./types"
+import { supabase } from "./supabase"
+import { ERR, type Event, type EventTaxonomy, OK, type OrganizerGroup, type Result } from "./types"
+
+type EventRow = {
+    id: string
+    slug: string
+    status: Event["status"]
+    event_start: string
+    event_end: string
+    created_at: string
+    updated_at: string
+    ticket_url: string | null
+    facebook_url: string | null
+    image_url: string | null
+    price: string | null
+    event_type_id: string
+    is_internal: boolean
+    is_featured: boolean
+    recurring_interval_days: number | null
+    translations: Event["translations"]
+    event_type: Event["event_type"]
+    event_organizer_group_memberships:
+        | {
+              display_order: number
+              organizer_group: OrganizerGroup | null
+          }[]
+        | null
+}
+
+const EVENT_SELECT = `
+    id,
+    slug,
+    status,
+    event_start,
+    event_end,
+    created_at,
+    updated_at,
+    ticket_url,
+    facebook_url,
+    image_url,
+    price,
+    event_type_id,
+    is_internal,
+    is_featured,
+    recurring_interval_days,
+    translations,
+    event_type:event_types (
+        id,
+        slug,
+        name,
+        description,
+        sort_order,
+        is_active
+    ),
+    event_organizer_group_memberships (
+        display_order,
+        organizer_group:event_organizer_groups (
+            id,
+            slug,
+            name,
+            sort_order,
+            is_active,
+            default_event_type_id
+        )
+    )
+`
 
 const getErrorMessage = (error: unknown): string => {
     if (error instanceof Error) {
         return error.message
     }
 
-    return "Ukjent feil"
+    return "Unknown error"
 }
 
-const isIgnorableStorageDeleteError = (error: unknown): boolean => {
-    if (typeof error !== "object" || error === null) {
-        return false
+const mapEventRow = (row: EventRow): Event => ({
+    id: row.id,
+    slug: row.slug,
+    status: row.status,
+    event_start: row.event_start,
+    event_end: row.event_end,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+    ticket_url: row.ticket_url,
+    facebook_url: row.facebook_url,
+    image: row.image_url
+        ? {
+              url: row.image_url,
+              __typename: "supabase",
+          }
+        : null,
+    event_type_id: row.event_type_id,
+    event_type: row.event_type,
+    organizer_groups: [...(row.event_organizer_group_memberships ?? [])]
+        .sort((left, right) => left.display_order - right.display_order)
+        .map(membership => membership.organizer_group)
+        .filter((group): group is OrganizerGroup => group !== null),
+    is_internal: row.is_internal,
+    is_featured: row.is_featured,
+    recurring_interval_days: row.recurring_interval_days,
+    price: row.price,
+    translations: row.translations,
+})
+
+const parseRecurringIntervalDays = (value: string): number | null => {
+    const trimmed = value.trim()
+    if (!trimmed) {
+        return null
     }
 
-    const errorWithCode = error as { code?: string }
-    return (
-        errorWithCode.code === "storage/object-not-found" ||
-        errorWithCode.code === "storage/invalid-url" ||
-        errorWithCode.code === "storage/invalid-argument"
-    )
-}
-
-const canDeleteImageFromStorage = async (
-    imageUrl: string,
-    eventIdToIgnore: string,
-): Promise<boolean> => {
-    const imageQuery = query(collection(db, "events"), where("image.url", "==", imageUrl), limit(2))
-    const snapshot = await getDocs(imageQuery)
-
-    return !snapshot.docs.some(imageDoc => imageDoc.id !== eventIdToIgnore)
-}
-
-const deleteImageFromStorageIfUnused = async (
-    imageUrl: unknown,
-    eventIdToIgnore: string,
-): Promise<void> => {
-    if (typeof imageUrl !== "string" || !imageUrl.trim()) {
-        return
+    const parsed = Number.parseInt(trimmed, 10)
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+        throw new Error("Recurring interval must be a positive number of days.")
     }
 
-    const normalizedUrl = imageUrl.trim()
-    const isUsedByOtherEvents = !(await canDeleteImageFromStorage(normalizedUrl, eventIdToIgnore))
-    if (isUsedByOtherEvents) {
-        return
-    }
-
-    try {
-        await deleteEventImageByUrl(normalizedUrl)
-    } catch (error) {
-        if (isIgnorableStorageDeleteError(error)) {
-            return
-        }
-
-        throw error
-    }
+    return parsed
 }
 
-/**
- * Look up a category by ID
- */
-function getCategoryById(id: number): { id: number; name: string } | null {
-    const category = categoryOptions.find(c => c.id === id)
-    return category ? { id: category.id, name: category.name } : null
-}
-
-/**
- * Look up an organizer by ID
- */
-function getOrganizerById(id: number): { id: number | null; name: string } | null {
-    const organizer = organizerOptions.find(o => o.id === id)
-    return organizer ? { id: organizer.id, name: organizer.name } : null
-}
-
-/**
- * Convert form values to Firestore document format
- */
-async function formToFirestore(
+async function formToEventRecord(
     formValues: EventFormValues,
     options?: {
         slug?: string
         imageUrl?: string | null
-        status?: FirestoreEvent["status"]
-        createdAt?: Timestamp
-        updatedAt?: Timestamp
+        status?: Event["status"]
+        createdAt?: string
+        updatedAt?: string
     },
-): Promise<CreateFirestoreEvent> {
-    const now = Timestamp.now()
-
-    // Generate slug from Norwegian or English name
+) {
+    const now = new Date().toISOString()
     const nameForSlug = formValues.no.name || formValues.en.name
     const slug = options?.slug ?? (await generateUniqueSlug(nameForSlug))
 
-    // Build categories array from selected IDs
-    const categories = formValues.categories
-        .map(id => getCategoryById(id))
-        .filter((c): c is { id: number; name: string } => c !== null)
-
-    // Build organizers array from selected IDs (first one is primary)
-    const organizers = formValues.organizers
-        .map(id => getOrganizerById(id))
-        .filter((o): o is { id: number | null; name: string } => o !== null)
-    const organizer = organizers[0] ?? null
-
-    if (!formValues.startTime || !formValues.endTime) {
-        throw new Error("Start- og sluttid må fylles ut.")
+    if (!formValues.eventTypeId) {
+        throw new Error("Event type must be selected.")
     }
 
-    // Parse timestamps
-    const eventStart = Timestamp.fromDate(formValues.startTime)
-    const eventEnd = Timestamp.fromDate(formValues.endTime)
+    if (!formValues.startTime || !formValues.endTime) {
+        throw new Error("Start and end time must be filled in.")
+    }
 
     return {
         slug,
         status: options?.status ?? "published",
-
-        event_start: eventStart,
-        event_end: eventEnd,
+        event_start: formValues.startTime.toISOString(),
+        event_end: formValues.endTime.toISOString(),
         created_at: options?.createdAt ?? now,
         updated_at: options?.updatedAt ?? now,
-
         ticket_url: formValues.ticketsUrl || null,
         facebook_url: formValues.facebookUrl || null,
-
-        image: options?.imageUrl ? { url: options.imageUrl, __typename: "firestore" } : null,
-
-        organizer,
-        categories,
+        image_url: options?.imageUrl ?? null,
+        event_type_id: formValues.eventTypeId,
+        is_internal: formValues.isInternal,
+        is_featured: formValues.isFeatured,
+        recurring_interval_days: parseRecurringIntervalDays(formValues.recurringIntervalDays),
         price: formValues.price || null,
-
         translations: {
             no: formValues.no.available
                 ? {
@@ -168,82 +177,142 @@ async function formToFirestore(
     }
 }
 
-/**
- * Create a new event in Firestore
- */
-export async function createEvent(formValues: EventFormValues): Promise<FirestoreEvent> {
-    const nameForSlug = formValues.no.name || formValues.en.name
-    const slug = await generateUniqueSlug(nameForSlug)
-    const imageUrl = formValues.image ? await uploadEventImage(formValues.image, slug) : null
-    const eventData = await formToFirestore(formValues, { slug, imageUrl })
-    const eventsRef = collection(db, "events")
-    const docRef = await addDoc(eventsRef, eventData)
+async function syncOrganizerGroupMemberships(
+    eventId: string,
+    organizerGroupIds: string[],
+): Promise<Result<null>> {
+    const { error: deleteError } = await supabase
+        .from("event_organizer_group_memberships")
+        .delete()
+        .eq("event_id", eventId)
 
-    return {
-        id: docRef.id,
-        ...eventData,
+    if (deleteError) {
+        return ERR(deleteError.message)
     }
+
+    if (organizerGroupIds.length === 0) {
+        return OK(null)
+    }
+
+    const { error: insertError } = await supabase.from("event_organizer_group_memberships").insert(
+        organizerGroupIds.map((organizerGroupId, index) => ({
+            event_id: eventId,
+            organizer_group_id: organizerGroupId,
+            display_order: index,
+        })),
+    )
+
+    if (insertError) {
+        return ERR(insertError.message)
+    }
+
+    return OK(null)
 }
 
-/**
- * Get all published events, ordered by start time
- */
-export async function getEvents(): Promise<Result<FirestoreEvent[]>> {
-    try {
-        const eventsRef = collection(db, "events")
-        const q = query(
-            eventsRef,
-            where("status", "==", "published"),
-            orderBy("event_start", "asc"),
-        )
+export async function listEventTaxonomy(): Promise<Result<EventTaxonomy>> {
+    const [
+        { data: eventTypes, error: eventTypesError },
+        { data: organizerGroups, error: organizerGroupsError },
+    ] = await Promise.all([
+        supabase
+            .from("event_types")
+            .select("id, slug, name, description, sort_order, is_active")
+            .eq("is_active", true)
+            .order("sort_order", { ascending: true }),
+        supabase
+            .from("event_organizer_groups")
+            .select("id, slug, name, sort_order, is_active, default_event_type_id")
+            .eq("is_active", true)
+            .order("sort_order", { ascending: true }),
+    ])
 
-        const snapshot = await getDocs(q)
-
-        const events = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data(),
-        })) as FirestoreEvent[]
-
-        console.log(events)
-
-        return OK(events)
-    } catch (err) {
-        console.log(err)
-        return ERR(getErrorMessage(err))
+    if (eventTypesError) {
+        return ERR(eventTypesError.message)
     }
+
+    if (organizerGroupsError) {
+        return ERR(organizerGroupsError.message)
+    }
+
+    return OK({
+        eventTypes: eventTypes ?? [],
+        organizerGroups: organizerGroups ?? [],
+    })
 }
 
-/**
- * Get an event by document id
- */
-export async function getEventById(id: string): Promise<Result<FirestoreEvent>> {
-    try {
-        const eventRef = doc(db, "events", id)
-        const eventSnapshot = await getDoc(eventRef)
+export async function fetchEvents(): Promise<Result<Event[]>> {
+    const { data, error } = await supabase
+        .from("events")
+        .select(EVENT_SELECT)
+        .order("event_start", { ascending: true })
 
-        if (!eventSnapshot.exists()) {
-            return ERR("Fant ikke arrangementet.")
+    if (error) {
+        return ERR(error.message)
+    }
+
+    return OK(((data ?? []) as EventRow[]).map(mapEventRow))
+}
+
+export async function fetchEventById(id: string): Promise<Result<Event>> {
+    const { data, error } = await supabase.from("events").select(EVENT_SELECT).eq("id", id).single()
+
+    if (error) {
+        return ERR(error.message)
+    }
+
+    return OK(mapEventRow(data as EventRow))
+}
+
+export async function createEvent(formValues: EventFormValues): Promise<Result<Event>> {
+    let uploadedImageUrl: string | null = null
+
+    try {
+        const nameForSlug = formValues.no.name || formValues.en.name
+        const slug = await generateUniqueSlug(nameForSlug)
+        uploadedImageUrl = formValues.image ? await uploadEventImage(formValues.image, slug) : null
+        const eventData = await formToEventRecord(formValues, { slug, imageUrl: uploadedImageUrl })
+
+        const { data, error } = await supabase
+            .from("events")
+            .insert(eventData)
+            .select("id")
+            .single()
+
+        if (error || !data?.id) {
+            return ERR(error?.message ?? "Failed to create event.")
         }
 
-        return OK({
-            id: eventSnapshot.id,
-            ...eventSnapshot.data(),
-        } as FirestoreEvent)
-    } catch (err) {
-        console.log(err)
-        return ERR(getErrorMessage(err))
+        const membershipsResult = await syncOrganizerGroupMemberships(
+            data.id,
+            formValues.organizerGroupIds,
+        )
+
+        if (!membershipsResult.ok) {
+            return membershipsResult
+        }
+
+        return fetchEventById(data.id)
+    } catch (error) {
+        if (uploadedImageUrl) {
+            try {
+                await deleteEventImageByUrl(uploadedImageUrl)
+            } catch (cleanupError) {
+                console.warn(
+                    "Failed to clean up uploaded image after create failure.",
+                    cleanupError,
+                )
+            }
+        }
+
+        return ERR(getErrorMessage(error))
     }
 }
 
-/**
- * Update an existing event in Firestore
- */
-export async function updateEvent(
-    id: string,
-    formValues: EventFormValues,
-): Promise<Result<FirestoreEvent>> {
+export async function updateEvent(id: string, formValues: EventFormValues): Promise<Result<Event>> {
+    let uploadedImageUrl: string | null = null
+
     try {
-        const existingEventResult = await getEventById(id)
+        const existingEventResult = await fetchEventById(id)
         if (!existingEventResult.ok) {
             return ERR(existingEventResult.error)
         }
@@ -253,74 +322,64 @@ export async function updateEvent(
         let nextImageUrl = existingImageUrl
 
         if (formValues.image) {
-            nextImageUrl = await uploadEventImage(formValues.image, existingEvent.slug)
-
-            if (existingImageUrl && existingImageUrl !== nextImageUrl) {
-                await deleteImageFromStorageIfUnused(existingImageUrl, id)
-            }
+            uploadedImageUrl = await uploadEventImage(formValues.image, existingEvent.slug)
+            nextImageUrl = uploadedImageUrl
         } else if (formValues.removeImage) {
-            await deleteImageFromStorageIfUnused(existingImageUrl, id)
             nextImageUrl = null
         }
 
-        const eventData = await formToFirestore(formValues, {
+        const eventData = await formToEventRecord(formValues, {
             slug: existingEvent.slug,
             status: existingEvent.status,
             imageUrl: nextImageUrl,
             createdAt: existingEvent.created_at,
-            updatedAt: Timestamp.now(),
+            updatedAt: new Date().toISOString(),
         })
 
-        const eventRef = doc(db, "events", id)
-        await updateDoc(eventRef, eventData)
+        const { error } = await supabase.from("events").update(eventData).eq("id", id)
 
-        return OK({
-            id,
-            ...eventData,
-        })
-    } catch (err) {
-        console.log(err)
-        return ERR(getErrorMessage(err))
-    }
-}
-
-/**
- * Delete an event and its associated image from Firebase Storage.
- */
-export async function deleteEvent(id: string): Promise<Result<null>> {
-    try {
-        const eventResult = await getEventById(id)
-        if (!eventResult.ok) {
-            return ERR(eventResult.error)
+        if (error) {
+            return ERR(error.message)
         }
 
-        const imageUrl = eventResult.data.image?.url ?? null
-        await deleteDoc(doc(db, "events", id))
-        await deleteImageFromStorageIfUnused(imageUrl, id)
+        const membershipsResult = await syncOrganizerGroupMemberships(
+            id,
+            formValues.organizerGroupIds,
+        )
 
-        return OK(null)
-    } catch (err) {
-        console.log(err)
-        return ERR(getErrorMessage(err))
+        if (!membershipsResult.ok) {
+            return membershipsResult
+        }
+
+        if (formValues.removeImage && existingImageUrl) {
+            try {
+                await deleteEventImageByUrl(existingImageUrl)
+            } catch (cleanupError) {
+                console.warn("Failed to delete removed event image.", cleanupError)
+            }
+        } else if (uploadedImageUrl && existingImageUrl && uploadedImageUrl !== existingImageUrl) {
+            try {
+                await deleteEventImageByUrl(existingImageUrl)
+            } catch (cleanupError) {
+                console.warn("Failed to delete replaced event image.", cleanupError)
+            }
+        }
+
+        return fetchEventById(id)
+    } catch (error) {
+        if (uploadedImageUrl) {
+            try {
+                await deleteEventImageByUrl(uploadedImageUrl)
+            } catch (cleanupError) {
+                console.warn(
+                    "Failed to clean up uploaded image after update failure.",
+                    cleanupError,
+                )
+            }
+        }
+
+        return ERR(getErrorMessage(error))
     }
 }
 
-/**
- * Get a single event by slug
- */
-export async function getEventBySlug(slug: string): Promise<FirestoreEvent | null> {
-    const eventsRef = collection(db, "events")
-    const q = query(eventsRef, where("slug", "==", slug))
-
-    const snapshot = await getDocs(q)
-
-    const firstDoc = snapshot.docs[0]
-    if (!firstDoc) {
-        return null
-    }
-
-    return {
-        id: firstDoc.id,
-        ...firstDoc.data(),
-    } as FirestoreEvent
-}
+export { supabase }

@@ -3,13 +3,14 @@ import { useEffect, useState } from "react"
 import { Link, useNavigate, useParams } from "react-router-dom"
 import { toast } from "sonner"
 import { EventFormLayout } from "@/components/form/EventFormLayout"
-import { firestoreEventToFormValues } from "@/lib/event-form"
-import { deleteEvent, getEventById, updateEvent } from "@/lib/services/events"
-import type { FirestoreEvent } from "@/lib/services/types"
+import { eventToFormValues } from "@/lib/event-form"
+import { fetchEventById, supabase, updateEvent } from "@/lib/services/events"
+import { deleteEventImageByUrl } from "@/lib/services/storage"
+import type { Event } from "@/lib/services/types"
 import type { EventFormValues } from "@/types"
 
 interface EditEventFormProps {
-    event: FirestoreEvent
+    event: Event
     initialValues: EventFormValues
 }
 
@@ -66,14 +67,24 @@ function EditEventForm({ event, initialValues }: EditEventFormProps) {
         }
 
         setIsDeleting(true)
-        const result = await deleteEvent(event.id)
+
+        const { error } = await supabase.from("events").delete().eq("id", event.id)
+
         setIsDeleting(false)
 
-        if (!result.ok) {
+        if (error) {
             toast.error("Kunne ikke slette arrangement", {
-                description: result.error,
+                description: error.message,
             })
             return
+        }
+
+        if (event.image?.url) {
+            try {
+                await deleteEventImageByUrl(event.image.url)
+            } catch (cleanupError) {
+                console.warn("Failed to delete image for removed event.", cleanupError)
+            }
         }
 
         toast.success("Arrangementet ble slettet.")
@@ -97,7 +108,7 @@ export default function EditEvent() {
     const { id } = useParams<{ id: string }>()
     const [isLoading, setIsLoading] = useState(true)
     const [loadError, setLoadError] = useState<string | null>(null)
-    const [event, setEvent] = useState<FirestoreEvent | null>(null)
+    const [event, setEvent] = useState<Event | null>(null)
     const [initialValues, setInitialValues] = useState<EventFormValues | null>(null)
 
     useEffect(() => {
@@ -111,20 +122,20 @@ export default function EditEvent() {
             }
 
             setIsLoading(true)
-            const eventResult = await getEventById(id)
+            const result = await fetchEventById(id)
 
             if (cancelled) {
                 return
             }
 
-            if (!eventResult.ok) {
-                setLoadError(eventResult.error)
+            if (!result.ok) {
+                setLoadError(result.error)
                 setIsLoading(false)
                 return
             }
 
-            setEvent(eventResult.data)
-            setInitialValues(firestoreEventToFormValues(eventResult.data))
+            setEvent(result.data)
+            setInitialValues(eventToFormValues(result.data))
             setLoadError(null)
             setIsLoading(false)
         }

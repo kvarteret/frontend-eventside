@@ -36,11 +36,11 @@ export function APITester() {
         <div className="flex flex-col gap-6">
             <form onSubmit={testEndpoint} className="flex items-center gap-2">
                 <Label htmlFor="method" className="sr-only">
-                    Method
+                    Metode
                 </Label>
                 <Select name="method" defaultValue="GET">
                     <SelectTrigger className="w-[100px]" id="method">
-                        <SelectValue placeholder="Method" />
+                        <SelectValue placeholder="Metode" />
                     </SelectTrigger>
                     <SelectContent align="start">
                         <SelectItem value="GET">GET</SelectItem>
@@ -48,7 +48,7 @@ export function APITester() {
                     </SelectContent>
                 </Select>
                 <Label htmlFor="endpoint" className="sr-only">
-                    Endpoint
+                    Endepunkt
                 </Label>
                 <Input
                     id="endpoint"
@@ -62,13 +62,13 @@ export function APITester() {
                 </Button>
             </form>
             <Label htmlFor="response" className="sr-only">
-                Response
+                Svar
             </Label>
             <Textarea
                 ref={responseInputRef}
                 id="response"
                 readOnly
-                placeholder="Response will appear here..."
+                placeholder="Svaret vises her..."
                 className="min-h-[140px] font-mono resize-y"
             />
         </div>

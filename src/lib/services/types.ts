@@ -1,6 +1,4 @@
-import type { Timestamp } from "firebase/firestore"
-
-export interface FirestoreTranslation {
+export interface Translation {
     available: boolean
     title: string
     description: string | null // rich description/article
@@ -26,7 +24,7 @@ export const ERR = <E>(error: E): Result<never, E> => ({
 export type Status = "in progress" | "nextWeek" | "upcoming" | "archived"
 export type StatusEvents = {
     status: Status
-    events: FirestoreEvent[]
+    events: Event[]
 }
 
 export type InternKortVerv = {
@@ -43,37 +41,58 @@ export type User = {
     aktiveVerv: InternKortVerv[]
 }
 
-export type Translations = {
-    no: FirestoreTranslation | null
-    en: FirestoreTranslation | null
+export type Profile = {
+    id: number
+    first_name: string
+    last_name: string
+    active_vervs: InternKortVerv[]
 }
 
-export interface FirestoreEvent {
-    id: string // Firestore doc ID
-    slug: string // Auto-generated from name
+export type Translations = {
+    no: Translation | null
+    en: Translation | null
+}
+
+export type EventType = {
+    id: string
+    slug: string
+    name: string
+    description: string | null
+    sort_order: number
+    is_active: boolean
+}
+
+export type OrganizerGroup = {
+    id: string
+    slug: string
+    name: string
+    sort_order: number
+    is_active: boolean
+    default_event_type_id: string | null
+}
+
+export type EventTaxonomy = {
+    eventTypes: EventType[]
+    organizerGroups: OrganizerGroup[]
+}
+
+export type Event = {
+    id: string
+    slug: string
     status: "published" | "draft" | "archived"
-
-    // Timestamps
-    event_start: Timestamp
-    event_end: Timestamp
-    created_at: Timestamp
-    updated_at: Timestamp
-
-    // Links
+    event_start: string
+    event_end: string
+    created_at: string
+    updated_at: string
     ticket_url: string | null
     facebook_url: string | null
-
-    // Image (URL-based for MVP)
-    image: { url: string; __typename: "firestore" } | null
-
-    // Organization
-    organizer: { id: number | null; name: string } | null
-    categories: { id: number; name: string }[]
+    image: { url: string; __typename: "supabase" } | null
+    event_type_id: string
+    event_type: EventType | null
+    organizer_groups: OrganizerGroup[]
+    is_internal: boolean
+    is_featured: boolean
+    recurring_interval_days: number | null
     price: string | null
-
-    // Bilingual translations
     translations: Translations
 }
-
-// Type for creating a new event (without id which is assigned by Firestore)
-export type CreateFirestoreEvent = Omit<FirestoreEvent, "id">

@@ -1,15 +1,15 @@
 import { type ClassValue, clsx } from "clsx"
-import { format, parse } from "date-fns"
-import { Timestamp } from "firebase/firestore"
+import { format } from "date-fns"
 import { twMerge } from "tailwind-merge"
 import {
     ERR,
-    type FirestoreEvent,
-    type FirestoreTranslation,
+    type Event,
     OK,
+    type OrganizerGroup,
     type Result,
     type Status,
     type StatusEvents,
+    type Translation,
     type Translations,
 } from "./services/types"
 
@@ -24,10 +24,13 @@ export function capitalizeFirstLetter(string: string) {
     return string.charAt(0).toUpperCase() + string.slice(1)
 }
 
-export function getEventStatus(event: FirestoreEvent): Status {
-    const now = Timestamp.now()
-    const { event_start: start, event_end: end } = event
-    const nextWeek = start.seconds - now.seconds < 604800
+export function getEventStatus(event: Event): Status {
+    const now = new Date()
+
+    const { event_start, event_end } = event
+    const start = new Date(event_start)
+    const end = new Date(event_end)
+    const nextWeek = (start.getTime() - now.getTime()) / 1000 < 604800
 
     if (now < start && nextWeek) return "nextWeek"
     if (now < start) return "upcoming"
@@ -35,11 +38,11 @@ export function getEventStatus(event: FirestoreEvent): Status {
     return "in progress"
 }
 
-export function categorizeEvents(events: FirestoreEvent[]): StatusEvents[] {
-    const inProgress: FirestoreEvent[] = []
-    const nextWeek: FirestoreEvent[] = []
-    const upcoming: FirestoreEvent[] = []
-    const archived: FirestoreEvent[] = []
+export function categorizeEvents(events: Event[]): StatusEvents[] {
+    const inProgress: Event[] = []
+    const nextWeek: Event[] = []
+    const upcoming: Event[] = []
+    const archived: Event[] = []
 
     for (const event of events) {
         const status = getEventStatus(event)
@@ -110,31 +113,44 @@ export const projectDescriptionPreview = (
     return `${normalized.slice(0, maxChars).trimEnd()}...`
 }
 
-export function getFirestoreTranslation(translations: Translations): Result<FirestoreTranslation> {
+export function getTranslation(translations: Translations): Result<Translation> {
     const { en, no } = translations
     if (no !== null) return OK(no)
     if (en !== null) return OK(en)
     return ERR("Could not find event translation")
 }
 
-export function eventDateCard(date: Timestamp) {
-    const newTime = date.toDate().toLocaleDateString("no-NO")
-    return newTime
+export function eventDateCard(date: string): string {
+    return format(new Date(date), "dd.MM.yyyy")
 }
 
-export function timeRemaining(date: Timestamp) {
-    const eventTime = date.toDate().getTime()
-    const currentTime = Date.now()
-    const diff = (eventTime - currentTime) / 1000
+export function timeRemaining(isostring: string): string {
+    const date = new Date(isostring)
+    const diff = (date.getTime() - Date.now()) / 1000
     const hours = diff / 3600
     const days = hours / 24
     if (hours < 0) return ""
-    else if (hours >= 24) return `Dager gjenstår: ${Math.round(days)}`
-    else return `Timer gjenstår: ${Math.round(hours)}`
+    if (hours >= 24) return `Dager gjenstår: ${Math.round(days)}`
+    return `Timer gjenstår: ${Math.round(hours)}`
 }
 
-export function weekday(date: Timestamp) {
-    const weekday = date.toDate().getDay()
+export function weekday(isostring: string): string {
+    const date = new Date(isostring)
     const days = ["Søn", "Man", "Tir", "Ons", "Tor", "Fre", "Lør"]
-    return days[weekday] + " "
+    return days[date.getDay()] + " "
+}
+
+export function buildOrganizerGroupText(groups: OrganizerGroup[]): string {
+    return groups.map(group => group.name).join(", ")
+}
+
+export function buildEventTaxonomyText(event: Event): string {
+    const eventTypeName = event.event_type?.name ?? "Ukjent type"
+    const organizerGroups = buildOrganizerGroupText(event.organizer_groups)
+
+    if (!organizerGroups) {
+        return eventTypeName
+    }
+
+    return `${eventTypeName} (${organizerGroups})`
 }

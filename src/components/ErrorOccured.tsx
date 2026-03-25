@@ -1,3 +1,3 @@
 export default function ErrorOccured() {
-    return <div>An error occurred, please try again later.</div>
+    return <div>Det oppstod en feil. Prøv igjen senere.</div>
 }

@@ -1,4 +1,4 @@
-import type { FirestoreEvent, FirestoreTranslation } from "@/lib/services/types"
+import type { Event, Translation } from "@/lib/services/types"
 import { projectDescriptionPreview } from "@/lib/utils"
 import type { EventFormValues, LanguageContent } from "@/types"
 
@@ -11,8 +11,11 @@ const createDefaultLanguageContent = (): LanguageContent => ({
 })
 
 export const createDefaultEventFormValues = (): EventFormValues => ({
-    categories: [],
-    organizers: [],
+    eventTypeId: "",
+    organizerGroupIds: [],
+    isInternal: false,
+    isFeatured: false,
+    recurringIntervalDays: "",
     startTime: undefined,
     endTime: undefined,
     facebookUrl: "",
@@ -24,9 +27,7 @@ export const createDefaultEventFormValues = (): EventFormValues => ({
     en: createDefaultLanguageContent(),
 })
 
-const mapTranslationToLanguageContent = (
-    translation: FirestoreTranslation | null,
-): LanguageContent => {
+const mapTranslationToLanguageContent = (translation: Translation | null): LanguageContent => {
     if (!translation) {
         return {
             ...createDefaultLanguageContent(),
@@ -43,14 +44,15 @@ const mapTranslationToLanguageContent = (
     }
 }
 
-export const firestoreEventToFormValues = (event: FirestoreEvent): EventFormValues => {
-    const organizerId = event.organizer?.id
-
+export const eventToFormValues = (event: Event): EventFormValues => {
     return {
-        categories: event.categories.map(category => category.id),
-        organizers: typeof organizerId === "number" ? [organizerId] : [],
-        startTime: event.event_start.toDate(),
-        endTime: event.event_end.toDate(),
+        eventTypeId: event.event_type_id,
+        organizerGroupIds: event.organizer_groups.map(group => group.id),
+        isInternal: event.is_internal,
+        isFeatured: event.is_featured,
+        recurringIntervalDays: event.recurring_interval_days?.toString() ?? "",
+        startTime: new Date(event.event_start),
+        endTime: new Date(event.event_end),
         facebookUrl: event.facebook_url ?? "",
         price: event.price ?? "",
         ticketsUrl: event.ticket_url ?? "",
