@@ -3,7 +3,7 @@ import type { EventFormValues } from "@/types"
 import { generateUniqueSlug } from "./slugify"
 import { deleteEventImageByUrl, uploadEventImage } from "./storage"
 import { supabase } from "./supabase"
-import { ERR, type Event, type EventTaxonomy, OK, type OrganizerGroup, type Result } from "./types"
+import { ERR, type Event, type EventTaxonomy, OK, type OrganizerGroup, type Result, type Room } from "./types"
 
 type EventRow = {
     id: string
@@ -18,11 +18,14 @@ type EventRow = {
     image_url: string | null
     price: string | null
     event_type_id: string
+    room_id: string | null
+    room_text: string | null
     is_internal: boolean
     is_featured: boolean
     recurring_interval_days: number | null
     translations: Event["translations"]
     event_type: Event["event_type"]
+    room: Room | null
     event_organizer_group_memberships:
         | {
               display_order: number
@@ -44,6 +47,8 @@ const EVENT_SELECT = `
     image_url,
     price,
     event_type_id,
+    room_id,
+    room_text,
     is_internal,
     is_featured,
     recurring_interval_days,
@@ -53,6 +58,13 @@ const EVENT_SELECT = `
         slug,
         name,
         description,
+        sort_order,
+        is_active
+    ),
+    room:rooms (
+        id,
+        slug,
+        name,
         sort_order,
         is_active
     ),
@@ -95,6 +107,9 @@ const mapEventRow = (row: EventRow): Event => ({
         : null,
     event_type_id: row.event_type_id,
     event_type: row.event_type,
+    room_id: row.room_id,
+    room_text: row.room_text,
+    room: row.room,
     organizer_groups: [...(row.event_organizer_group_memberships ?? [])]
         .sort((left, right) => left.display_order - right.display_order)
         .map(membership => membership.organizer_group)
@@ -120,6 +135,27 @@ const parseRecurringIntervalDays = (value: string): number | null => {
     return parsed
 }
 
+const normalizeRoomValues = (
+    roomId: string,
+    roomText: string,
+): { roomId: string | null; roomText: string | null } => {
+    const normalizedRoomId = roomId.trim()
+    const normalizedRoomText = roomText.trim()
+
+    if (normalizedRoomId && normalizedRoomText) {
+        throw new Error("Velg enten et rom eller skriv inn et annet rom.")
+    }
+
+    if (!normalizedRoomId && !normalizedRoomText) {
+        throw new Error("Arrangement må ha enten et valgt rom eller et egendefinert rom.")
+    }
+
+    return {
+        roomId: normalizedRoomId || null,
+        roomText: normalizedRoomText || null,
+    }
+}
+
 async function formToEventRecord(
     formValues: EventFormValues,
     options?: {
@@ -142,6 +178,8 @@ async function formToEventRecord(
         throw new Error("Start and end time must be filled in.")
     }
 
+    const normalizedRoom = normalizeRoomValues(formValues.roomId, formValues.roomText)
+
     return {
         slug,
         status: options?.status ?? "published",
@@ -153,6 +191,8 @@ async function formToEventRecord(
         facebook_url: formValues.facebookUrl || null,
         image_url: options?.imageUrl ?? null,
         event_type_id: formValues.eventTypeId,
+        room_id: normalizedRoom.roomId,
+        room_text: normalizedRoom.roomText,
         is_internal: formValues.isInternal,
         is_featured: formValues.isFeatured,
         recurring_interval_days: parseRecurringIntervalDays(formValues.recurringIntervalDays),
@@ -214,6 +254,7 @@ export async function listEventTaxonomy(): Promise<Result<EventTaxonomy>> {
     const [
         { data: eventTypes, error: eventTypesError },
         { data: organizerGroups, error: organizerGroupsError },
+        { data: rooms, error: roomsError },
     ] = await Promise.all([
         supabase
             .from("event_types")
@@ -223,6 +264,11 @@ export async function listEventTaxonomy(): Promise<Result<EventTaxonomy>> {
         supabase
             .from("event_organizer_groups")
             .select("id, slug, name, sort_order, is_active, default_event_type_id")
+            .eq("is_active", true)
+            .order("sort_order", { ascending: true }),
+        supabase
+            .from("rooms")
+            .select("id, slug, name, sort_order, is_active")
             .eq("is_active", true)
             .order("sort_order", { ascending: true }),
     ])
@@ -235,9 +281,14 @@ export async function listEventTaxonomy(): Promise<Result<EventTaxonomy>> {
         return ERR(organizerGroupsError.message)
     }
 
+    if (roomsError) {
+        return ERR(roomsError.message)
+    }
+
     return OK({
         eventTypes: eventTypes ?? [],
         organizerGroups: organizerGroups ?? [],
+        rooms: rooms ?? [],
     })
 }
 
@@ -268,6 +319,10 @@ export async function createEvent(formValues: EventFormValues): Promise<Result<E
     let uploadedImageUrl: string | null = null
 
     try {
+        if (!formValues.image) {
+            return ERR("Arrangement må ha et bilde.")
+        }
+
         const nameForSlug = formValues.no.name || formValues.en.name
         const slug = await generateUniqueSlug(nameForSlug)
         uploadedImageUrl = formValues.image ? await uploadEventImage(formValues.image, slug) : null
@@ -320,6 +375,11 @@ export async function updateEvent(id: string, formValues: EventFormValues): Prom
 
         const existingEvent = existingEventResult.data
         const existingImageUrl = existingEvent.image?.url ?? null
+
+        if (!formValues.image && (formValues.removeImage || !existingImageUrl)) {
+            return ERR("Arrangement må ha et bilde.")
+        }
+
         let nextImageUrl = existingImageUrl
 
         if (formValues.image) {

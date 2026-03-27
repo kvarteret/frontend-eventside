@@ -71,9 +71,18 @@ export type OrganizerGroup = {
     default_event_type_id: string | null
 }
 
+export type Room = {
+    id: string
+    slug: string
+    name: string
+    sort_order: number
+    is_active: boolean
+}
+
 export type EventTaxonomy = {
     eventTypes: EventType[]
     organizerGroups: OrganizerGroup[]
+    rooms: Room[]
 }
 
 export type Event = {
@@ -89,6 +98,9 @@ export type Event = {
     image: { url: string; __typename: "supabase" } | null
     event_type_id: string
     event_type: EventType | null
+    room_id: string | null
+    room_text: string | null
+    room: Room | null
     organizer_groups: OrganizerGroup[]
     is_internal: boolean
     is_featured: boolean

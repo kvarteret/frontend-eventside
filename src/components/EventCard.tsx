@@ -3,6 +3,7 @@ import type { Event } from "@/lib/services/types"
 import {
     buildEventTaxonomyText,
     eventDateCard,
+    getEventRoomLabel,
     getTranslation,
     projectDescriptionPreview,
     timeRemaining,
@@ -35,6 +36,11 @@ export function EventCard({ event }: { event: Event }) {
                 ) : null}
                 {event.is_internal ? (
                     <span className="text-xs font-medium text-amber-700">Kun internt</span>
+                ) : null}
+                {getEventRoomLabel(event) ? (
+                    <span className="text-xs font-medium text-muted-foreground">
+                        Rom: {getEventRoomLabel(event)}
+                    </span>
                 ) : null}
                 <div className="flex justify-between">
                     <span className="justify-left">{timeRemaining(startDate)}</span>

@@ -1,6 +1,16 @@
-import { useRef } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
+import {
+    Select,
+    SelectContent,
+    SelectGroup,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
 import { DateTimePicker } from "@/components/ui/date-time-picker"
 import { Input } from "@/components/ui/input"
+import { listEventTaxonomy } from "@/lib/services/events"
+import type { EventTaxonomy } from "@/lib/services/types"
 import type { EventForm, EventFormValues } from "@/types"
 import { FieldWrapper } from "./FieldWrapper"
 
@@ -46,7 +56,7 @@ const TextField = ({ form, config, existingImageUrl }: TextFieldProps) => (
                 <Input
                     type={config.type}
                     placeholder={config.placeholder}
-                    required={config.required}
+                    required={config.type === "file" ? !existingImageUrl : config.required}
                     value={config.type === "file" ? undefined : field.state.value}
                     onBlur={field.handleBlur}
                     accept={config.type === "file" ? "image/*" : undefined}
@@ -132,6 +142,39 @@ interface DetailsSectionProps {
 
 export const DetailsSection = ({ form, existingImageUrl }: DetailsSectionProps) => {
     const hasInitializedEndTime = useRef(false)
+    const [taxonomy, setTaxonomy] = useState<EventTaxonomy | null>(null)
+    const [taxonomyError, setTaxonomyError] = useState<string | null>(null)
+
+    useEffect(() => {
+        let cancelled = false
+
+        const loadTaxonomy = async () => {
+            const result = await listEventTaxonomy()
+
+            if (cancelled) {
+                return
+            }
+
+            if (!result.ok) {
+                setTaxonomyError(result.error)
+                return
+            }
+
+            setTaxonomy(result.data)
+            setTaxonomyError(null)
+        }
+
+        void loadTaxonomy()
+
+        return () => {
+            cancelled = true
+        }
+    }, [])
+
+    const roomLabelById = useMemo(
+        () => new Map((taxonomy?.rooms ?? []).map(room => [room.id, room.name])),
+        [taxonomy],
+    )
 
     return (
         <section className="space-y-6">
@@ -184,6 +227,72 @@ export const DetailsSection = ({ form, existingImageUrl }: DetailsSectionProps) 
                     )}
                 </form.Field>
             </div>
+
+            <form.Field name="roomId">
+                {(field: any) => (
+                    <FieldWrapper
+                        label="Rom"
+                        hint={
+                            taxonomyError
+                                ? `Kunne ikke laste rom: ${taxonomyError}`
+                                : "Velg et navngitt rom, eller bruk feltet for annet rom under."
+                        }
+                    >
+                        <Select
+                            value={field.state.value || undefined}
+                            onValueChange={value => {
+                                const nextValue = value === "__none__" ? "" : value
+                                field.handleChange(nextValue)
+                                if (nextValue) {
+                                    form.setFieldValue("roomText", "")
+                                }
+                            }}
+                        >
+                            <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Velg rom">
+                                    {value =>
+                                        typeof value === "string"
+                                            ? (roomLabelById.get(value) ?? value)
+                                            : undefined
+                                    }
+                                </SelectValue>
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectGroup>
+                                    <SelectItem value="__none__">Annet / ikke valgt</SelectItem>
+                                    {(taxonomy?.rooms ?? []).map(room => (
+                                        <SelectItem key={room.id} value={room.id}>
+                                            {room.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectGroup>
+                            </SelectContent>
+                        </Select>
+                    </FieldWrapper>
+                )}
+            </form.Field>
+
+            <form.Field name="roomText">
+                {(field: any) => (
+                    <FieldWrapper
+                        label="Annet rom"
+                        hint="Bruk dette bare når arrangementet ikke passer i romlisten."
+                    >
+                        <Input
+                            placeholder="Skriv inn rom eller sted"
+                            value={field.state.value}
+                            onBlur={field.handleBlur}
+                            onChange={e => {
+                                const nextValue = e.target.value
+                                field.handleChange(nextValue)
+                                if (nextValue.trim()) {
+                                    form.setFieldValue("roomId", "")
+                                }
+                            }}
+                        />
+                    </FieldWrapper>
+                )}
+            </form.Field>
 
             {detailsFields.map(config => (
                 <TextField

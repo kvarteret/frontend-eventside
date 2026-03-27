@@ -145,6 +145,10 @@ export function buildOrganizerGroupText(groups: OrganizerGroup[]): string {
     return groups.map(group => group.name).join(", ")
 }
 
+export function getEventRoomLabel(event: Event): string {
+    return event.room?.name ?? event.room_text ?? ""
+}
+
 export function buildEventTaxonomyText(event: Event): string {
     const eventTypeName = event.event_type?.name ?? "Ukjent type"
     const organizerGroups = buildOrganizerGroupText(event.organizer_groups)

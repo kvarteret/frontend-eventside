@@ -11,6 +11,8 @@ export interface LanguageContent {
 export interface EventFormValues {
     eventTypeId: string
     organizerGroupIds: string[]
+    roomId: string
+    roomText: string
     isInternal: boolean
     isFeatured: boolean
     recurringIntervalDays: string

@@ -14,6 +14,8 @@ const createDefaultLanguageContent = (): LanguageContent => ({
 export const createDefaultEventFormValues = (): EventFormValues => ({
     eventTypeId: "",
     organizerGroupIds: [],
+    roomId: "",
+    roomText: "",
     isInternal: false,
     isFeatured: false,
     recurringIntervalDays: "",
@@ -49,6 +51,8 @@ export const eventToFormValues = (event: Event): EventFormValues => {
     return {
         eventTypeId: event.event_type_id,
         organizerGroupIds: event.organizer_groups.map(group => group.id),
+        roomId: event.room_id ?? "",
+        roomText: event.room_text ?? "",
         isInternal: event.is_internal,
         isFeatured: event.is_featured,
         recurringIntervalDays: event.recurring_interval_days?.toString() ?? "",
