@@ -7,6 +7,7 @@
         "dev": "bun --hot src/index.ts",
         "start": "NODE_ENV=production bun src/index.ts",
         "build": "bun run build.ts",
+        "test": "TZ=Europe/Oslo bun test",
         "migrate:event-images": "bun run scripts/port-event-images.ts",
         "lint": "bunx @biomejs/biome check .",
         "lint:ci": "bunx @biomejs/biome ci .",
