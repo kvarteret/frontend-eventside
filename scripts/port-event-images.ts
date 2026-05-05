@@ -59,6 +59,9 @@ const listLegacyImageEvents = (): LegacyImageEvent[] => {
 
     return rows.split("\n").map(row => {
         const [id, slug, image_url] = row.split("|")
+        if (!id || !slug || !image_url) {
+            throw new Error(`Unexpected event row format: ${row}`)
+        }
         return { id, slug, image_url }
     })
 }

@@ -4,8 +4,7 @@ import { Link, useNavigate, useParams } from "react-router-dom"
 import { toast } from "sonner"
 import { EventFormLayout } from "@/components/form/EventFormLayout"
 import { eventToFormValues } from "@/lib/event-form"
-import { fetchEventById, supabase, updateEvent } from "@/lib/services/events"
-import { deleteEventImageByUrl } from "@/lib/services/storage"
+import { deleteEvent, fetchEventById, updateEvent } from "@/lib/services/events"
 import type { Event } from "@/lib/services/types"
 import type { EventFormValues } from "@/types"
 
@@ -68,23 +67,15 @@ function EditEventForm({ event, initialValues }: EditEventFormProps) {
 
         setIsDeleting(true)
 
-        const { error } = await supabase.from("events").delete().eq("id", event.id)
+        const result = await deleteEvent(event.id)
 
         setIsDeleting(false)
 
-        if (error) {
+        if (!result.ok) {
             toast.error("Kunne ikke slette arrangement", {
-                description: error.message,
+                description: result.error,
             })
             return
-        }
-
-        if (event.image?.url) {
-            try {
-                await deleteEventImageByUrl(event.image.url)
-            } catch (cleanupError) {
-                console.warn("Failed to delete image for removed event.", cleanupError)
-            }
         }
 
         toast.success("Arrangementet ble slettet.")

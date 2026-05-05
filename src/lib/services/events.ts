@@ -1,9 +1,14 @@
-import { formatEventDateTimeForApi } from "@/lib/date-time"
 import type { EventFormValues } from "@/types"
-import { generateUniqueSlug } from "./slugify"
-import { deleteEventImageByUrl, uploadEventImage } from "./storage"
 import { supabase } from "./supabase"
-import { ERR, type Event, type EventTaxonomy, OK, type OrganizerGroup, type Result, type Room } from "./types"
+import {
+    ERR,
+    type Event,
+    type EventTaxonomy,
+    OK,
+    type OrganizerGroup,
+    type Result,
+    type Room,
+} from "./types"
 
 type EventRow = {
     id: string
@@ -89,6 +94,38 @@ const getErrorMessage = (error: unknown): string => {
     return "Unknown error"
 }
 
+const serializeFormValues = (formValues: EventFormValues) => ({
+    ...formValues,
+    image: undefined,
+    startTime: formValues.startTime?.toISOString() ?? null,
+    endTime: formValues.endTime?.toISOString() ?? null,
+})
+
+const buildEventFormData = (formValues: EventFormValues): FormData => {
+    const formData = new FormData()
+    formData.set("payload", JSON.stringify(serializeFormValues(formValues)))
+
+    if (formValues.image) {
+        formData.set("image", formValues.image)
+    }
+
+    return formData
+}
+
+const parseEventWriteResponse = async (response: Response): Promise<Result<Event>> => {
+    const payload = (await response.json()) as { event?: unknown; error?: unknown }
+
+    if (!response.ok) {
+        return ERR(typeof payload.error === "string" ? payload.error : "Failed to write event.")
+    }
+
+    if (!payload.event || typeof payload.event !== "object") {
+        return ERR("Failed to write event.")
+    }
+
+    return OK(mapEventRow(payload.event as EventRow))
+}
+
 const mapEventRow = (row: EventRow): Event => ({
     id: row.id,
     slug: row.slug,
@@ -120,135 +157,6 @@ const mapEventRow = (row: EventRow): Event => ({
     price: row.price,
     translations: row.translations,
 })
-
-const parseRecurringIntervalDays = (value: string): number | null => {
-    const trimmed = value.trim()
-    if (!trimmed) {
-        return null
-    }
-
-    const parsed = Number.parseInt(trimmed, 10)
-    if (!Number.isFinite(parsed) || parsed <= 0) {
-        throw new Error("Recurring interval must be a positive number of days.")
-    }
-
-    return parsed
-}
-
-const normalizeRoomValues = (
-    roomId: string,
-    roomText: string,
-): { roomId: string | null; roomText: string | null } => {
-    const normalizedRoomId = roomId.trim()
-    const normalizedRoomText = roomText.trim()
-
-    if (normalizedRoomId && normalizedRoomText) {
-        throw new Error("Velg enten et rom eller skriv inn et annet rom.")
-    }
-
-    if (!normalizedRoomId && !normalizedRoomText) {
-        throw new Error("Arrangement må ha enten et valgt rom eller et egendefinert rom.")
-    }
-
-    return {
-        roomId: normalizedRoomId || null,
-        roomText: normalizedRoomText || null,
-    }
-}
-
-async function formToEventRecord(
-    formValues: EventFormValues,
-    options?: {
-        slug?: string
-        imageUrl?: string | null
-        status?: Event["status"]
-        createdAt?: string
-        updatedAt?: string
-    },
-) {
-    const now = new Date().toISOString()
-    const nameForSlug = formValues.no.name || formValues.en.name
-    const slug = options?.slug ?? (await generateUniqueSlug(nameForSlug))
-
-    if (!formValues.eventTypeId) {
-        throw new Error("Event type must be selected.")
-    }
-
-    if (!formValues.startTime || !formValues.endTime) {
-        throw new Error("Start and end time must be filled in.")
-    }
-
-    const normalizedRoom = normalizeRoomValues(formValues.roomId, formValues.roomText)
-
-    return {
-        slug,
-        status: options?.status ?? "published",
-        event_start: formatEventDateTimeForApi(formValues.startTime),
-        event_end: formatEventDateTimeForApi(formValues.endTime),
-        created_at: options?.createdAt ?? now,
-        updated_at: options?.updatedAt ?? now,
-        ticket_url: formValues.ticketsUrl || null,
-        facebook_url: formValues.facebookUrl || null,
-        image_url: options?.imageUrl ?? null,
-        event_type_id: formValues.eventTypeId,
-        room_id: normalizedRoom.roomId,
-        room_text: normalizedRoom.roomText,
-        is_internal: formValues.isInternal,
-        is_featured: formValues.isFeatured,
-        recurring_interval_days: parseRecurringIntervalDays(formValues.recurringIntervalDays),
-        price: formValues.price || null,
-        translations: {
-            no: formValues.no.available
-                ? {
-                      available: true,
-                      title: formValues.no.name,
-                      description: formValues.no.article || null,
-                      image_caption: formValues.no.imageCaption || null,
-                  }
-                : null,
-            en: formValues.en.available
-                ? {
-                      available: true,
-                      title: formValues.en.name,
-                      description: formValues.en.article || null,
-                      image_caption: formValues.en.imageCaption || null,
-                  }
-                : null,
-        },
-    }
-}
-
-async function syncOrganizerGroupMemberships(
-    eventId: string,
-    organizerGroupIds: string[],
-): Promise<Result<null>> {
-    const { error: deleteError } = await supabase
-        .from("event_organizer_group_memberships")
-        .delete()
-        .eq("event_id", eventId)
-
-    if (deleteError) {
-        return ERR(deleteError.message)
-    }
-
-    if (organizerGroupIds.length === 0) {
-        return OK(null)
-    }
-
-    const { error: insertError } = await supabase.from("event_organizer_group_memberships").insert(
-        organizerGroupIds.map((organizerGroupId, index) => ({
-            event_id: eventId,
-            organizer_group_id: organizerGroupId,
-            display_order: index,
-        })),
-    )
-
-    if (insertError) {
-        return ERR(insertError.message)
-    }
-
-    return OK(null)
-}
 
 export async function listEventTaxonomy(): Promise<Result<EventTaxonomy>> {
     const [
@@ -293,152 +201,90 @@ export async function listEventTaxonomy(): Promise<Result<EventTaxonomy>> {
 }
 
 export async function fetchEvents(): Promise<Result<Event[]>> {
-    const { data, error } = await supabase
-        .from("events")
-        .select(EVENT_SELECT)
-        .order("event_start", { ascending: true })
+    try {
+        const response = await fetch("/api/events")
+        const payload = (await response.json()) as { events?: unknown; error?: unknown }
 
-    if (error) {
-        return ERR(error.message)
+        if (!response.ok) {
+            return ERR(
+                typeof payload.error === "string" ? payload.error : "Failed to fetch events.",
+            )
+        }
+
+        if (!Array.isArray(payload.events)) {
+            return ERR("Failed to fetch events.")
+        }
+
+        return OK((payload.events as EventRow[]).map(mapEventRow))
+    } catch (error) {
+        return ERR(getErrorMessage(error))
     }
-
-    return OK(((data ?? []) as EventRow[]).map(mapEventRow))
 }
 
 export async function fetchEventById(id: string): Promise<Result<Event>> {
-    const { data, error } = await supabase.from("events").select(EVENT_SELECT).eq("id", id).single()
+    try {
+        const response = await fetch(`/api/events/${encodeURIComponent(id)}`)
+        const payload = (await response.json()) as { event?: unknown; error?: unknown }
 
-    if (error) {
-        return ERR(error.message)
+        if (!response.ok) {
+            return ERR(typeof payload.error === "string" ? payload.error : "Failed to fetch event.")
+        }
+
+        if (!payload.event || typeof payload.event !== "object") {
+            return ERR("Failed to fetch event.")
+        }
+
+        return OK(mapEventRow(payload.event as EventRow))
+    } catch (error) {
+        return ERR(getErrorMessage(error))
     }
-
-    return OK(mapEventRow(data as EventRow))
 }
 
 export async function createEvent(formValues: EventFormValues): Promise<Result<Event>> {
-    let uploadedImageUrl: string | null = null
-
     try {
         if (!formValues.image) {
             return ERR("Arrangement må ha et bilde.")
         }
 
-        const nameForSlug = formValues.no.name || formValues.en.name
-        const slug = await generateUniqueSlug(nameForSlug)
-        uploadedImageUrl = formValues.image ? await uploadEventImage(formValues.image, slug) : null
-        const eventData = await formToEventRecord(formValues, { slug, imageUrl: uploadedImageUrl })
+        const response = await fetch("/api/events", {
+            method: "POST",
+            body: buildEventFormData(formValues),
+        })
 
-        const { data, error } = await supabase
-            .from("events")
-            .insert(eventData)
-            .select("id")
-            .single()
-
-        if (error || !data?.id) {
-            return ERR(error?.message ?? "Failed to create event.")
-        }
-
-        const membershipsResult = await syncOrganizerGroupMemberships(
-            data.id,
-            formValues.organizerGroupIds,
-        )
-
-        if (!membershipsResult.ok) {
-            return membershipsResult
-        }
-
-        return fetchEventById(data.id)
+        return parseEventWriteResponse(response)
     } catch (error) {
-        if (uploadedImageUrl) {
-            try {
-                await deleteEventImageByUrl(uploadedImageUrl)
-            } catch (cleanupError) {
-                console.warn(
-                    "Failed to clean up uploaded image after create failure.",
-                    cleanupError,
-                )
-            }
-        }
-
         return ERR(getErrorMessage(error))
     }
 }
 
 export async function updateEvent(id: string, formValues: EventFormValues): Promise<Result<Event>> {
-    let uploadedImageUrl: string | null = null
-
     try {
-        const existingEventResult = await fetchEventById(id)
-        if (!existingEventResult.ok) {
-            return ERR(existingEventResult.error)
-        }
-
-        const existingEvent = existingEventResult.data
-        const existingImageUrl = existingEvent.image?.url ?? null
-
-        if (!formValues.image && (formValues.removeImage || !existingImageUrl)) {
-            return ERR("Arrangement må ha et bilde.")
-        }
-
-        let nextImageUrl = existingImageUrl
-
-        if (formValues.image) {
-            uploadedImageUrl = await uploadEventImage(formValues.image, existingEvent.slug)
-            nextImageUrl = uploadedImageUrl
-        } else if (formValues.removeImage) {
-            nextImageUrl = null
-        }
-
-        const eventData = await formToEventRecord(formValues, {
-            slug: existingEvent.slug,
-            status: existingEvent.status,
-            imageUrl: nextImageUrl,
-            createdAt: existingEvent.created_at,
-            updatedAt: new Date().toISOString(),
+        const response = await fetch(`/api/events/${encodeURIComponent(id)}`, {
+            method: "PATCH",
+            body: buildEventFormData(formValues),
         })
 
-        const { error } = await supabase.from("events").update(eventData).eq("id", id)
-
-        if (error) {
-            return ERR(error.message)
-        }
-
-        const membershipsResult = await syncOrganizerGroupMemberships(
-            id,
-            formValues.organizerGroupIds,
-        )
-
-        if (!membershipsResult.ok) {
-            return membershipsResult
-        }
-
-        if (formValues.removeImage && existingImageUrl) {
-            try {
-                await deleteEventImageByUrl(existingImageUrl)
-            } catch (cleanupError) {
-                console.warn("Failed to delete removed event image.", cleanupError)
-            }
-        } else if (uploadedImageUrl && existingImageUrl && uploadedImageUrl !== existingImageUrl) {
-            try {
-                await deleteEventImageByUrl(existingImageUrl)
-            } catch (cleanupError) {
-                console.warn("Failed to delete replaced event image.", cleanupError)
-            }
-        }
-
-        return fetchEventById(id)
+        return parseEventWriteResponse(response)
     } catch (error) {
-        if (uploadedImageUrl) {
-            try {
-                await deleteEventImageByUrl(uploadedImageUrl)
-            } catch (cleanupError) {
-                console.warn(
-                    "Failed to clean up uploaded image after update failure.",
-                    cleanupError,
-                )
-            }
+        return ERR(getErrorMessage(error))
+    }
+}
+
+export async function deleteEvent(id: string): Promise<Result<null>> {
+    try {
+        const response = await fetch(`/api/events/${encodeURIComponent(id)}`, {
+            method: "DELETE",
+        })
+        const payload = (await response.json()) as { error?: unknown }
+
+        if (!response.ok) {
+            return ERR(
+                typeof payload.error === "string" ? payload.error : "Failed to delete event.",
+            )
         }
 
+        return OK(null)
+    } catch (error) {
         return ERR(getErrorMessage(error))
     }
 }

@@ -1,4 +1,10 @@
 import { serve } from "bun"
+import {
+    DELETE as handleEventDelete,
+    GET as handleEventGet,
+    PATCH as handleEventPatch,
+} from "../api/events/[id]"
+import { GET as handleEventsGet, POST as handleEventsPost } from "../api/events/index"
 import { POST as handleFeedbackPost } from "../api/feedback"
 import index from "./index.html"
 
@@ -29,6 +35,27 @@ const server = serve({
         "/api/feedback": {
             async POST(req) {
                 return handleFeedbackPost(req)
+            },
+        },
+
+        "/api/events": {
+            async GET() {
+                return handleEventsGet()
+            },
+            async POST(req) {
+                return handleEventsPost(req)
+            },
+        },
+
+        "/api/events/:id": {
+            async GET(req) {
+                return handleEventGet(req)
+            },
+            async PATCH(req) {
+                return handleEventPatch(req)
+            },
+            async DELETE(req) {
+                return handleEventDelete(req)
             },
         },
 

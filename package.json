@@ -8,12 +8,14 @@
         "start": "NODE_ENV=production bun src/index.ts",
         "build": "bun run build.ts",
         "test": "TZ=Europe/Oslo bun test",
-        "migrate:event-images": "bun run scripts/port-event-images.ts",
+        "migrate:event-images": "bun run scripts/migrate-event-images-to-azure.ts",
+        "migrate:event-images-to-supabase": "bun run scripts/port-event-images.ts",
         "lint": "bunx @biomejs/biome check .",
         "lint:ci": "bunx @biomejs/biome ci .",
         "format": "bunx @biomejs/biome format --write ."
     },
     "dependencies": {
+        "@azure/storage-blob": "^12.31.0",
         "@base-ui/react": "^1.1.0",
         "@fontsource-variable/inter": "^5.2.8",
         "@radix-ui/react-dialog": "^1.1.15",

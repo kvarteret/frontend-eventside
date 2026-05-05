@@ -51,9 +51,12 @@ Example:
     process.exit(0)
 }
 
-const toCamelCase = (str: string): string => str.replace(/-([a-z])/g, g => g[1].toUpperCase())
+type BuildConfigRecord = Partial<Bun.BuildConfig> & Record<string, unknown>
 
-const parseValue = (value: string): any => {
+const toCamelCase = (str: string): string =>
+    str.replace(/-([a-z])/g, match => match[1]?.toUpperCase() ?? "")
+
+const parseValue = (value: string): unknown => {
     if (value === "true") return true
     if (value === "false") return false
 
@@ -66,7 +69,7 @@ const parseValue = (value: string): any => {
 }
 
 function parseArgs(): Partial<Bun.BuildConfig> {
-    const config: Partial<Bun.BuildConfig> = {}
+    const config: BuildConfigRecord = {}
     const args = process.argv.slice(2)
 
     for (let i = 0; i < args.length; i++) {
@@ -100,8 +103,17 @@ function parseArgs(): Partial<Bun.BuildConfig> {
 
         if (key.includes(".")) {
             const [parentKey, childKey] = key.split(".")
-            config[parentKey] = config[parentKey] || {}
-            config[parentKey][childKey] = parseValue(value)
+            if (!parentKey || !childKey) {
+                continue
+            }
+
+            const parentValue = config[parentKey]
+            const parentConfig =
+                parentValue && typeof parentValue === "object" && !Array.isArray(parentValue)
+                    ? (parentValue as Record<string, unknown>)
+                    : {}
+            parentConfig[childKey] = parseValue(value)
+            config[parentKey] = parentConfig
         } else {
             config[key] = parseValue(value)
         }
