@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react"
+import { DateTimePicker } from "@/components/ui/date-time-picker"
+import { Input } from "@/components/ui/input"
 import {
     Select,
     SelectContent,
@@ -7,8 +9,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
-import { DateTimePicker } from "@/components/ui/date-time-picker"
-import { Input } from "@/components/ui/input"
 import { listEventTaxonomy } from "@/lib/services/events"
 import type { EventTaxonomy } from "@/lib/services/types"
 import type { EventForm, EventFormValues } from "@/types"
